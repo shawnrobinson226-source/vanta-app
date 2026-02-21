@@ -1,42 +1,55 @@
 "use client";
 
-import { useTransition } from "react";
-import { clearLogs } from "@/app/session/actions";
+import { useEffect, useState } from "react";
+import { clearLogs, getLogs } from "@/lib/storage/v1LogStore";
 
 export default function SettingsPage() {
-  const [isPending, startTransition] = useTransition();
+  const [count, setCount] = useState(0);
 
-  function handleClear() {
-    startTransition(async () => {
-      await clearLogs();
-      window.location.reload();
-    });
-  }
+  useEffect(() => {
+    setCount(getLogs().length);
+  }, []);
 
   return (
-    <main className="min-h-screen p-6">
-      <h1 className="text-2xl font-semibold">VANTA — Settings</h1>
-      <p className="mt-2 text-sm opacity-80">
-        Controlled settings (local dev foundation).
+    <main style={{ padding: 24, maxWidth: 900 }}>
+      <h1 style={{ marginBottom: 8 }}>Settings</h1>
+      <p style={{ marginTop: 0, opacity: 0.8 }}>
+        Starter Pack only. No configuration in v1.
       </p>
 
-      <div className="mt-6 rounded-lg border p-4">
-        <h2 className="text-lg font-medium">Logs</h2>
-        <p className="mt-2 text-sm opacity-80">
-          This clears <span className="font-mono">data/logs.json</span>.
-        </p>
+      <div
+        style={{
+          marginTop: 16,
+          padding: 16,
+          borderRadius: 12,
+          border: "1px solid rgba(255,255,255,0.12)",
+          background: "rgba(255,255,255,0.02)",
+        }}
+      >
+        <div style={{ fontSize: 12, opacity: 0.7 }}>Local Logs</div>
+        <div style={{ fontSize: 18, fontWeight: 700, marginTop: 6 }}>
+          {count} saved entries
+        </div>
 
         <button
-          onClick={handleClear}
-          disabled={isPending}
-          className="mt-4 rounded border px-3 py-2 text-sm"
+          type="button"
+          onClick={() => {
+            clearLogs();
+            setCount(0);
+            alert("Logs cleared.");
+          }}
+          style={{
+            marginTop: 12,
+            padding: "10px 14px",
+            borderRadius: 10,
+            border: "1px solid rgba(255,255,255,0.2)",
+            background: "rgba(255,255,255,0.03)",
+            color: "inherit",
+            cursor: "pointer",
+          }}
         >
-          {isPending ? "Clearing..." : "Clear logs"}
+          Clear Logs
         </button>
-
-        <p className="mt-3 text-xs opacity-70">
-          Note: Local file persistence.
-        </p>
       </div>
     </main>
   );

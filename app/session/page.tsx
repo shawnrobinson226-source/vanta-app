@@ -1,389 +1,162 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { buildExecutionPlan } from "@/lib/engine/executionFlow";
-import { getTool } from "@/lib/kernel/tools";
-import {
-  createLog,
-  listLogs,
-  startLoop,
-  completeStep,
-  completeLoop,
-} from "./actions";
-import type { LogEntry, StepStatus } from "@/lib/kernel/logs";
-import type { ToolId } from "@/lib/kernel/tools";
-
-type SelfReportOption =
-  | "baseline"
-  | "fog"
-  | "drift"
-  | "overwhelm"
-  | "hesitation"
-  | "contradiction"
-  | "recovery";
-
-const OPTIONS: { value: SelfReportOption; label: string }[] = [
-  { value: "baseline", label: "Baseline" },
-  { value: "fog", label: "Fog" },
-  { value: "drift", label: "Drift" },
-  { value: "overwhelm", label: "Overwhelm" },
-  { value: "hesitation", label: "Hesitation" },
-  { value: "contradiction", label: "Contradiction" },
-  { value: "recovery", label: "Recovery" },
-];
-
-type LoopId = "DAILY_ANCHOR" | "DAILY_REVIEW" | "WEEKLY_AUDIT";
-
-type ActiveLoop = {
-  loopId: LoopId;
-  loopRunId: string;
-  name: string;
-  steps: { order: number; label: string; toolId?: ToolId }[];
-  completed: Record<number, StepStatus>;
-};
+import { useMemo, useState } from "react";
+import { analyzeTrigger } from "@/lib/kernel/v1/analyze";
+import { addLog } from "@/lib/storage/v1LogStore";
 
 export default function SessionPage() {
-  const [selfReport, setSelfReport] = useState<SelfReportOption>("fog");
-  const [minutesSinceLastAction, setMinutesSinceLastAction] = useState<number>(0);
-  const [overloadFlag, setOverloadFlag] = useState<boolean>(false);
+  const [trigger, setTrigger] = useState("");
+  const [submittedTrigger, setSubmittedTrigger] = useState<string | null>(null);
 
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [isPending, startTransition] = useTransition();
+  const result = useMemo(() => {
+    if (!submittedTrigger) return null;
+    const t = submittedTrigger.trim();
+    if (!t) return null;
+    return analyzeTrigger(t);
+  }, [submittedTrigger]);
 
-  const [activeLoop, setActiveLoop] = useState<ActiveLoop | null>(null);
-  const [stepNote, setStepNote] = useState<string>("");
-
-  const plan = useMemo(() => {
-    return buildExecutionPlan({
-      selfReport,
-      minutesSinceLastAction,
-      overloadFlag,
-    });
-  }, [selfReport, minutesSinceLastAction, overloadFlag]);
-
-  const tool = useMemo(() => getTool(plan.toolId), [plan.toolId]);
-
-  function refreshLogs() {
-    startTransition(async () => {
-      const items = await listLogs(20);
-      setLogs(items as LogEntry[]);
-    });
-  }
-
-  function logThisRun() {
-    startTransition(async () => {
-      await createLog({
-        type: "TOOL_RUN",
-        stateId: plan.stateId,
-        modeId: plan.modeId,
-        toolId: plan.toolId,
-        message: `Guardian run: ${plan.toolId} (state ${plan.stateId}, mode ${plan.modeId}).`,
-        level: overloadFlag ? 3 : undefined,
-        tags: ["session"],
-      });
-
-      const items = await listLogs(20);
-      setLogs(items as LogEntry[]);
-    });
-  }
-
-  function beginLoop(loopId: LoopId) {
-    startTransition(async () => {
-      const started = await startLoop(loopId);
-      setActiveLoop({
-        loopId: started.loopId as LoopId,
-        loopRunId: started.loopRunId,
-        name: started.name,
-        steps: [...started.steps],
-        completed: {},
-      });
-
-      const items = await listLogs(20);
-      setLogs(items as LogEntry[]);
-    });
-  }
-
-  function markStep(
-    step: { order: number; label: string; toolId?: ToolId },
-    status: StepStatus
-  ) {
-    if (!activeLoop) return;
-
-    startTransition(async () => {
-      await completeStep({
-        loopId: activeLoop.loopId,
-        loopRunId: activeLoop.loopRunId,
-        stepOrder: step.order,
-        stepLabel: step.label,
-        toolId: step.toolId,
-        status,
-        note: stepNote.trim() ? stepNote.trim() : undefined,
-      });
-
-      setActiveLoop((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          completed: { ...prev.completed, [step.order]: status },
-        };
-      });
-
-      setStepNote("");
-      const items = await listLogs(20);
-      setLogs(items as LogEntry[]);
-    });
-  }
-
-  function finishLoop() {
-    if (!activeLoop) return;
-
-    startTransition(async () => {
-      await completeLoop({
-        loopId: activeLoop.loopId,
-        loopRunId: activeLoop.loopRunId,
-      });
-      setActiveLoop(null);
-      const items = await listLogs(20);
-      setLogs(items as LogEntry[]);
-    });
-  }
-
-  const allStepsMarked =
-    activeLoop && activeLoop.steps.every((s) => Boolean(activeLoop.completed[s.order]));
+  const canAnalyze = trigger.trim().length > 0;
+  const canSave = !!result;
 
   return (
-    <main className="min-h-screen p-6">
-      <h1 className="text-2xl font-semibold">VANTA — Session</h1>
-
-      <p className="mt-2 text-sm opacity-80">
-        Guardian of Becoming • Future Projection:{" "}
-        <span className="font-mono">{plan.futureProjectionName}</span>
+    <main style={{ padding: 24, maxWidth: 900 }}>
+      <h1 style={{ marginBottom: 8 }}>Session</h1>
+      <p style={{ marginTop: 0, opacity: 0.8 }}>
+        Enter a trigger. Get a likely fracture, reframe, and one redirect.
       </p>
 
-      {/* Inputs */}
-      <div className="mt-6 rounded-lg border p-4">
-        <h2 className="text-lg font-medium">Inputs</h2>
+      <label style={{ display: "block", marginTop: 16, marginBottom: 8 }}>
+        Trigger
+      </label>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <label className="grid gap-2 text-sm">
-            <span className="opacity-70">Self-report</span>
-            <select
-              className="rounded border px-3 py-2"
-              value={selfReport}
-              onChange={(e) => setSelfReport(e.target.value as SelfReportOption)}
-            >
-              {OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
+      <textarea
+        value={trigger}
+        onChange={(e) => setTrigger(e.target.value)}
+        rows={6}
+        placeholder="Describe what happened and what you felt."
+        style={{
+          width: "100%",
+          padding: 12,
+          borderRadius: 8,
+          border: "1px solid rgba(255,255,255,0.2)",
+          background: "rgba(255,255,255,0.03)",
+          color: "inherit",
+        }}
+      />
 
-          <label className="grid gap-2 text-sm">
-            <span className="opacity-70">Minutes since last action</span>
-            <input
-              className="rounded border px-3 py-2"
-              type="number"
-              min={0}
-              step={1}
-              value={minutesSinceLastAction}
-              onChange={(e) => setMinutesSinceLastAction(Number(e.target.value))}
-            />
-          </label>
+      <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          onClick={() => setSubmittedTrigger(trigger)}
+          disabled={!canAnalyze}
+          style={{
+            padding: "10px 14px",
+            borderRadius: 8,
+            border: "1px solid rgba(255,255,255,0.2)",
+            background: canAnalyze ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)",
+            color: "inherit",
+            cursor: canAnalyze ? "pointer" : "not-allowed",
+          }}
+        >
+          Analyze
+        </button>
 
-          <label className="flex items-center gap-3 text-sm">
-            <input
-              type="checkbox"
-              checked={overloadFlag}
-              onChange={(e) => setOverloadFlag(e.target.checked)}
-            />
-            <span className="opacity-80">Overload flag</span>
-          </label>
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setTrigger("");
+            setSubmittedTrigger(null);
+          }}
+          style={{
+            padding: "10px 14px",
+            borderRadius: 8,
+            border: "1px solid rgba(255,255,255,0.2)",
+            background: "rgba(255,255,255,0.03)",
+            color: "inherit",
+            cursor: "pointer",
+          }}
+        >
+          Clear
+        </button>
 
-        <div className="mt-4 flex flex-wrap gap-3">
-          <button className="rounded border px-3 py-2 text-sm" onClick={logThisRun} disabled={isPending}>
-            {isPending ? "Working..." : "Log this run"}
-          </button>
+        <button
+          type="button"
+          disabled={!canSave}
+          onClick={() => {
+            if (!result) return;
 
-          <button className="rounded border px-3 py-2 text-sm" onClick={refreshLogs} disabled={isPending}>
-            {isPending ? "Working..." : "Refresh logs"}
-          </button>
+            const finalTrigger = (submittedTrigger ?? trigger).trim();
+            if (!finalTrigger) return;
 
-          <button className="rounded border px-3 py-2 text-sm" onClick={() => beginLoop("DAILY_ANCHOR")} disabled={isPending || Boolean(activeLoop)}>
-            {isPending ? "Working..." : "Start Daily Anchor"}
-          </button>
+            addLog({
+              id: crypto.randomUUID(),
+              createdAt: new Date().toISOString(),
+              trigger: finalTrigger,
+              fractureLabel: result.fracture.label,
+              reframe: result.reframe,
+              redirectLabel: result.redirect.label,
+              redirectSteps: result.redirect.steps,
+            });
 
-          <button className="rounded border px-3 py-2 text-sm" onClick={() => beginLoop("DAILY_REVIEW")} disabled={isPending || Boolean(activeLoop)}>
-            {isPending ? "Working..." : "Start Daily Review"}
-          </button>
-
-          <button className="rounded border px-3 py-2 text-sm" onClick={() => beginLoop("WEEKLY_AUDIT")} disabled={isPending || Boolean(activeLoop)}>
-            {isPending ? "Working..." : "Start Weekly Audit"}
-          </button>
-        </div>
-
-        {activeLoop ? (
-          <p className="mt-3 text-xs opacity-70">
-            A loop is active. Finish it before starting another.
-          </p>
-        ) : null}
+            alert("Saved to logs.");
+          }}
+          style={{
+            padding: "10px 14px",
+            borderRadius: 8,
+            border: "1px solid rgba(255,255,255,0.2)",
+            background: canSave ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.02)",
+            color: "inherit",
+            cursor: canSave ? "pointer" : "not-allowed",
+          }}
+        >
+          Save to Logs
+        </button>
       </div>
 
-      {/* Active Loop */}
-      <div className="mt-6 rounded-lg border p-4">
-        <h2 className="text-lg font-medium">Active Loop</h2>
+      {result && (
+        <section
+          style={{
+            marginTop: 20,
+            padding: 16,
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.15)",
+            background: "rgba(255,255,255,0.02)",
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>Result</h2>
 
-        {!activeLoop ? (
-          <p className="mt-2 text-sm opacity-70">No active loop. Start one above.</p>
-        ) : (
-          <>
-            <p className="mt-2 text-sm opacity-80">
-              Running: <span className="font-mono">{activeLoop.name}</span>{" "}
-              <span className="text-xs opacity-70">(run: {activeLoop.loopRunId})</span>
-            </p>
-
-            <label className="mt-4 grid gap-2 text-sm">
-              <span className="opacity-70">Optional step note (saved on next step check)</span>
-              <input
-                className="rounded border px-3 py-2"
-                value={stepNote}
-                onChange={(e) => setStepNote(e.target.value)}
-                placeholder="(optional) quick note"
-              />
-            </label>
-
-            <ul className="mt-4 grid gap-2 text-sm">
-              {activeLoop.steps.map((s) => {
-                const status = activeLoop.completed[s.order];
-                return (
-                  <li key={s.order} className="rounded border p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <div className="text-xs opacity-70">
-                          Step {s.order}{s.toolId ? ` • tool:${s.toolId}` : ""}
-                        </div>
-                        <div className="mt-1">{s.label}</div>
-                        {status ? (
-                          <div className="mt-1 text-xs opacity-70">
-                            status: <span className="font-mono">{status}</span>
-                          </div>
-                        ) : null}
-                      </div>
-
-                      <div className="flex gap-2">
-                        <button
-                          className="rounded border px-3 py-2 text-xs"
-                          onClick={() => markStep(s, "done")}
-                          disabled={isPending || Boolean(status)}
-                        >
-                          Done
-                        </button>
-                        <button
-                          className="rounded border px-3 py-2 text-xs"
-                          onClick={() => markStep(s, "skipped")}
-                          disabled={isPending || Boolean(status)}
-                        >
-                          Skip
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <button
-                className="rounded border px-3 py-2 text-sm"
-                onClick={finishLoop}
-                disabled={isPending || !allStepsMarked}
-              >
-                {isPending ? "Working..." : "Complete Loop"}
-              </button>
-
-              {!allStepsMarked ? (
-                <p className="text-xs opacity-70">Mark every step Done/Skip to enable completion.</p>
-              ) : null}
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontSize: 12, opacity: 0.7 }}>Likely Fracture</div>
+            <div style={{ fontSize: 18, fontWeight: 600 }}>
+              {result.fracture.label}
             </div>
-          </>
-        )}
-      </div>
-
-      {/* Execution Plan */}
-      <div className="mt-6 rounded-lg border p-4">
-        <h2 className="text-lg font-medium">Execution Plan</h2>
-
-        <dl className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div>
-            <dt className="text-sm opacity-70">State</dt>
-            <dd className="font-mono">{plan.stateId}</dd>
+            <div style={{ marginTop: 6, opacity: 0.85 }}>
+              {result.fracture.description}
+            </div>
           </div>
-          <div>
-            <dt className="text-sm opacity-70">Mode</dt>
-            <dd className="font-mono">{plan.modeId}</dd>
+
+          <div style={{ marginTop: 16 }}>
+            <div style={{ fontSize: 12, opacity: 0.7 }}>Reframe</div>
+            <div style={{ marginTop: 6, lineHeight: 1.5 }}>
+              {result.reframe}
+            </div>
           </div>
-          <div>
-            <dt className="text-sm opacity-70">Tool</dt>
-            <dd className="font-mono">{plan.toolId}</dd>
+
+          <div style={{ marginTop: 16 }}>
+            <div style={{ fontSize: 12, opacity: 0.7 }}>Redirect</div>
+            <div style={{ fontSize: 16, fontWeight: 600, marginTop: 6 }}>
+              {result.redirect.label}
+            </div>
+            <ol style={{ marginTop: 8 }}>
+              {result.redirect.steps.map((s, i) => (
+                <li key={i} style={{ marginBottom: 6, lineHeight: 1.5 }}>
+                  {s}
+                </li>
+              ))}
+            </ol>
           </div>
-        </dl>
-
-        <div className="mt-6">
-          <h3 className="text-sm font-medium opacity-70">Reasons</h3>
-          <ul className="mt-2 list-disc pl-5 text-sm">
-            {plan.reasons.map((r, idx) => (
-              <li key={idx}>{r}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      {/* Tool Steps */}
-      <div className="mt-6 rounded-lg border p-4">
-        <h2 className="text-lg font-medium">Selected Tool</h2>
-        <p className="mt-2 text-sm opacity-80">{tool.description}</p>
-
-        <ol className="mt-4 grid gap-3">
-          {tool.steps.map((step, idx) => (
-            <li key={idx} className="rounded border p-3">
-              <div className="text-xs uppercase tracking-wide opacity-70">
-                {idx + 1}. {step.type}
-              </div>
-              <div className="mt-1 text-sm">{step.text}</div>
-            </li>
-          ))}
-        </ol>
-      </div>
-
-      {/* Logs */}
-      <div className="mt-6 rounded-lg border p-4">
-        <h2 className="text-lg font-medium">Recent Logs</h2>
-        {logs.length === 0 ? (
-          <p className="mt-2 text-sm opacity-70">
-            No logs loaded yet. Click “Refresh logs”.
-          </p>
-        ) : (
-          <ul className="mt-3 grid gap-2 text-sm">
-            {logs.map((l) => (
-              <li key={l.id} className="rounded border p-3">
-                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs opacity-70">
-                  <span className="font-mono">{l.timestamp}</span>
-                  <span className="font-mono">{l.type}</span>
-                  {l.loopId && <span className="font-mono">loop:{l.loopId}</span>}
-                  {l.loopRunId && <span className="font-mono">run:{l.loopRunId}</span>}
-                  {typeof l.stepOrder === "number" && <span className="font-mono">step:{l.stepOrder}</span>}
-                  {l.status && <span className="font-mono">status:{l.status}</span>}
-                  {l.toolId && <span className="font-mono">tool:{l.toolId}</span>}
-                </div>
-                <div className="mt-1">{l.message}</div>
-                {l.note ? <div className="mt-1 text-xs opacity-70">note: {l.note}</div> : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+        </section>
+      )}
     </main>
   );
 }

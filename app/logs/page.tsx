@@ -1,69 +1,86 @@
-// app/logs/page.tsx
-export const dynamic = "force-dynamic";
+"use client";
 
-import { listLogs } from "@/lib/storage/logStore";
-import { clearLogs } from "@/app/session/actions";
+import { useEffect, useState } from "react";
+import { clearLogs, getLogs, type V1LogEntry } from "@/lib/storage/v1LogStore";
 
-export default async function LogsPage() {
-  const logs = await listLogs(50);
+export default function LogsPage() {
+  const [logs, setLogs] = useState<V1LogEntry[]>([]);
+
+  useEffect(() => {
+    setLogs(getLogs());
+  }, []);
 
   return (
-    <main className="min-h-screen p-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">VANTA — Logs</h1>
-          <p className="mt-2 text-sm opacity-80">
-            File-based JSON logs (local). Newest first.
-          </p>
-        </div>
+    <main style={{ padding: 24 }}>
+      <h1 style={{ marginBottom: 8 }}>Logs</h1>
+      <p style={{ marginTop: 0, opacity: 0.8 }}>Last {Math.min(20, logs.length)} entries.</p>
 
-        <form action={clearLogs}>
-          <button className="rounded border px-3 py-2 text-sm" type="submit">
-            Clear logs
-          </button>
-        </form>
-      </div>
-
-      <div className="mt-4">
-        <a className="underline text-sm" href="/logs">
+      <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
+        <button
+          type="button"
+          onClick={() => setLogs(getLogs())}
+          style={{
+            padding: "10px 14px",
+            borderRadius: 8,
+            border: "1px solid rgba(255,255,255,0.2)",
+            background: "rgba(255,255,255,0.03)",
+            color: "inherit",
+            cursor: "pointer",
+          }}
+        >
           Refresh
-        </a>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            clearLogs();
+            setLogs([]);
+          }}
+          style={{
+            padding: "10px 14px",
+            borderRadius: 8,
+            border: "1px solid rgba(255,255,255,0.03)",
+            background: "rgba(255,255,255,0.02)",
+            color: "inherit",
+            cursor: "pointer",
+          }}
+        >
+          Clear Logs
+        </button>
       </div>
 
-      {logs.length === 0 ? (
-        <div className="mt-6 rounded-lg border p-4">
-          <p className="text-sm opacity-70">
-            No logs yet. Go to <a className="underline" href="/session">/session</a> and log a run.
-          </p>
-        </div>
-      ) : (
-        <ul className="mt-6 grid gap-2 text-sm">
-          {logs.map((l) => (
-            <li key={l.id} className="rounded border p-3">
-              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs opacity-70">
-                <span className="font-mono">{l.timestamp}</span>
-                <span className="font-mono">{l.type}</span>
-                {l.stateId && <span className="font-mono">state:{l.stateId}</span>}
-                {l.modeId && <span className="font-mono">mode:{l.modeId}</span>}
-                {l.toolId && <span className="font-mono">tool:{l.toolId}</span>}
-                {typeof l.level === "number" && (
-                  <span className="font-mono">level:{l.level}</span>
-                )}
-              </div>
-              <div className="mt-1">{l.message}</div>
-              {l.tags?.length ? (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {l.tags.map((t) => (
-                    <span key={t} className="rounded border px-2 py-0.5 text-xs opacity-80">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      )}
+      <div style={{ marginTop: 16, overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ textAlign: "left", opacity: 0.8 }}>
+              <th style={{ padding: "10px 8px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>Date</th>
+              <th style={{ padding: "10px 8px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>Fracture</th>
+              <th style={{ padding: "10px 8px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>Redirect</th>
+              <th style={{ padding: "10px 8px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>Trigger</th>
+            </tr>
+          </thead>
+          <tbody>
+            {logs.slice(0, 20).map((l) => (
+              <tr key={l.id}>
+                <td style={{ padding: "10px 8px", borderBottom: "1px solid rgba(255,255,255,0.08)", whiteSpace: "nowrap" }}>
+                  {new Date(l.createdAt).toLocaleString()}
+                </td>
+                <td style={{ padding: "10px 8px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>{l.fractureLabel}</td>
+                <td style={{ padding: "10px 8px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>{l.redirectLabel}</td>
+                <td style={{ padding: "10px 8px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>{l.trigger}</td>
+              </tr>
+            ))}
+            {logs.length === 0 && (
+              <tr>
+                <td colSpan={4} style={{ padding: 12, opacity: 0.7 }}>
+                  No logs yet. Run a session and click “Save to Logs.”
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </main>
   );
 }
