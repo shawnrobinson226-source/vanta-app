@@ -1,6 +1,6 @@
-import { Fracture } from "./types";
+﻿import { Fracture } from "./types";
 
-export const FRACTURES: Fracture[] = [
+export const FRACTURES: readonly Fracture[] = [
   {
     id: "control_loss",
     label: "Control Loss",
@@ -61,4 +61,4 @@ export const FRACTURES: Fracture[] = [
     description: "Triggered by self-attack framing.",
     signals: ["ashamed", "pathetic", "disgusting", "hate myself"]
   }
-];
+] as const;

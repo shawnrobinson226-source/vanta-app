@@ -1,4 +1,4 @@
-import { createClient, type Client } from "@libsql/client";
+﻿import { createClient, type Client } from "@libsql/client";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { seedDb } from "./seed";
@@ -8,6 +8,8 @@ declare global {
   var __vantaDbClient: Client | undefined;
   // eslint-disable-next-line no-var
   var __vantaDbInitialized: boolean | undefined;
+  // eslint-disable-next-line no-var
+  var __vantaDbInitPromise: Promise<void> | undefined;
 }
 
 function requireEnv(name: string): string {
@@ -25,9 +27,11 @@ export function getDb(): Client {
   return globalThis.__vantaDbClient;
 }
 
-async function runSchema(db: Client) {
-  const schemaPath = path.join(process.cwd(), "lib", "db", "schema.sql");
-  const raw = await fs.readFile(schemaPath, "utf8");
+export const db: Client = getDb();
+
+async function runSqlFile(db: Client, fileName: string) {
+  const filePath = path.join(process.cwd(), "lib", "db", fileName);
+  const raw = await fs.readFile(filePath, "utf8");
 
   const statements = raw
     .split(";")
@@ -42,9 +46,21 @@ async function runSchema(db: Client) {
 export async function initDbIfNeeded(): Promise<void> {
   if (globalThis.__vantaDbInitialized) return;
 
-  const db = getDb();
-  await runSchema(db);
-  await seedDb(db);
+  if (!globalThis.__vantaDbInitPromise) {
+    globalThis.__vantaDbInitPromise = (async () => {
+      const db = getDb();
 
-  globalThis.__vantaDbInitialized = true;
+      // schema.sql is the single source of truth for V1
+      await runSqlFile(db, "schema.sql");
+
+      await seedDb(db);
+
+      globalThis.__vantaDbInitialized = true;
+    })().catch((err) => {
+      globalThis.__vantaDbInitPromise = undefined;
+      throw err;
+    });
+  }
+
+  await globalThis.__vantaDbInitPromise;
 }

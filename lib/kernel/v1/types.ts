@@ -1,4 +1,4 @@
-export type FractureId =
+﻿export type FractureId =
   | "control_loss"
   | "rejection_sensitivity"
   | "status_threat"
@@ -10,6 +10,12 @@ export type FractureId =
   | "avoidance_loop"
   | "shame_spike";
 
+export type RedirectId =
+  | "do_20_min_block"
+  | "set_boundary"
+  | "clarify"
+  | "next_action";
+
 export type Fracture = {
   id: FractureId;
   label: string;
@@ -18,7 +24,7 @@ export type Fracture = {
 };
 
 export type Redirect = {
-  id: string;
+  id: RedirectId;
   label: string;
   steps: string[];
 };
