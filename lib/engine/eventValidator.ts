@@ -1,4 +1,4 @@
-// /lib/engine/eventValidator.ts
+// lib/engine/eventValidator.ts
 
 import {
   DISTORTION_CLASS,
@@ -33,11 +33,13 @@ function isNumber(x: unknown): x is number {
 }
 
 function isISODate(x: unknown): x is string {
-  // strict enough for V1; you can harden later
   return isString(x) && !Number.isNaN(Date.parse(x));
 }
 
-function oneOf<T extends readonly string[]>(x: unknown, vals: T): x is T[number] {
+function oneOf<T extends readonly string[]>(
+  x: unknown,
+  vals: T
+): x is T[number] {
   return isString(x) && (vals as readonly string[]).includes(x);
 }
 
@@ -45,7 +47,12 @@ function inRange(x: unknown, min: number, max: number): x is number {
   return isNumber(x) && x >= min && x <= max;
 }
 
-function requireField(obj: Record<string, unknown>, key: string, errors: ValidationError[], path: string) {
+function requireField(
+  obj: Record<string, unknown>,
+  key: string,
+  errors: ValidationError[],
+  path: string
+) {
   if (!(key in obj)) errors.push(err(path, "Missing field"));
 }
 
@@ -55,23 +62,29 @@ function requireField(obj: Record<string, unknown>, key: string, errors: Validat
 function validateBase(e: Record<string, unknown>): ValidationError[] {
   const errors: ValidationError[] = [];
 
-  if (!oneOf(e.event_type, EVENT_TYPE)) errors.push(err("event_type", "Invalid event_type"));
-  if (!isString(e.event_id) || e.event_id.length < 8) errors.push(err("event_id", "Invalid event_id"));
-  if (!isISODate(e.occurred_at)) errors.push(err("occurred_at", "Invalid ISO timestamp"));
-  if (!isString(e.schema_version)) errors.push(err("schema_version", "Missing schema_version"));
+  if (!oneOf(e.event_type, EVENT_TYPE))
+    errors.push(err("event_type", "Invalid event_type"));
+  if (!isString(e.event_id) || e.event_id.length < 8)
+    errors.push(err("event_id", "Invalid event_id"));
+  if (!isISODate(e.occurred_at))
+    errors.push(err("occurred_at", "Invalid ISO timestamp"));
+  if (!isString(e.schema_version))
+    errors.push(err("schema_version", "Missing schema_version"));
 
-  if (!isString(e.operator_id) || e.operator_id.length < 3) errors.push(err("operator_id", "Invalid operator_id"));
+  if (!isString(e.operator_id) || e.operator_id.length < 3)
+    errors.push(err("operator_id", "Invalid operator_id"));
 
   if (!isObject(e.actor)) errors.push(err("actor", "Missing actor"));
   else {
     const a = e.actor as Record<string, unknown>;
-    if (!oneOf(a.kind, ["human", "system", "ai"] as const)) errors.push(err("actor.kind", "Invalid actor.kind"));
+    if (!oneOf(a.kind, ["human", "system", "ai"] as const))
+      errors.push(err("actor.kind", "Invalid actor.kind"));
     if ("actor_id" in a && a.actor_id != null && !isString(a.actor_id))
       errors.push(err("actor.actor_id", "Invalid actor_id"));
   }
 
-  // meta is optional
-  if ("meta" in e && e.meta != null && !isObject(e.meta)) errors.push(err("meta", "meta must be an object"));
+  if ("meta" in e && e.meta != null && !isObject(e.meta))
+    errors.push(err("meta", "meta must be an object"));
 
   return errors;
 }
@@ -79,11 +92,13 @@ function validateBase(e: Record<string, unknown>): ValidationError[] {
 /**
  * Event-specific validators
  */
-function validateByType(e: Record<string, unknown>, type: EventType): ValidationError[] {
+function validateByType(
+  e: Record<string, unknown>,
+  type: EventType
+): ValidationError[] {
   const errors: ValidationError[] = [];
   const payload = e.payload;
 
-  // All events must have payload (even if empty, but we don't use empty payloads here)
   if (!isObject(payload)) {
     errors.push(err("payload", "payload must be an object"));
     return errors;
@@ -94,7 +109,6 @@ function validateByType(e: Record<string, unknown>, type: EventType): Validation
   switch (type) {
     case "session.created": {
       if (!isString(e.session_id)) errors.push(err("session_id", "session_id required"));
-      // entry fields optional
       if ("entry_state_context" in p && p.entry_state_context != null && !isString(p.entry_state_context))
         errors.push(err("payload.entry_state_context", "Must be string"));
       if ("entry_state_mood" in p && p.entry_state_mood != null && !isString(p.entry_state_mood))
@@ -122,7 +136,8 @@ function validateByType(e: Record<string, unknown>, type: EventType): Validation
       if (!isString(e.session_id)) errors.push(err("session_id", "session_id required"));
       if (!isNumber(p.step) || ![1,2,3,4,5,6,7,8,9].includes(p.step))
         errors.push(err("payload.step", "Step must be 1..9"));
-      if ("note" in p && p.note != null && !isString(p.note)) errors.push(err("payload.note", "Must be string"));
+      if ("note" in p && p.note != null && !isString(p.note))
+        errors.push(err("payload.note", "Must be string"));
       break;
     }
 
@@ -131,16 +146,20 @@ function validateByType(e: Record<string, unknown>, type: EventType): Validation
       if (!isObject(p.spreads_into)) errors.push(err("payload.spreads_into", "Required object"));
       else {
         const s = p.spreads_into as Record<string, unknown>;
-        if ("thought" in s && s.thought != null && !isString(s.thought)) errors.push(err("payload.spreads_into.thought", "Must be string"));
-        if ("emotion" in s && s.emotion != null && !isString(s.emotion)) errors.push(err("payload.spreads_into.emotion", "Must be string"));
-        if ("behavior" in s && s.behavior != null && !isString(s.behavior)) errors.push(err("payload.spreads_into.behavior", "Must be string"));
+        if ("thought" in s && s.thought != null && !isString(s.thought))
+          errors.push(err("payload.spreads_into.thought", "Must be string"));
+        if ("emotion" in s && s.emotion != null && !isString(s.emotion))
+          errors.push(err("payload.spreads_into.emotion", "Must be string"));
+        if ("behavior" in s && s.behavior != null && !isString(s.behavior))
+          errors.push(err("payload.spreads_into.behavior", "Must be string"));
       }
       break;
     }
 
     case "ai.classification.suggested": {
       if (!isString(e.session_id)) errors.push(err("session_id", "session_id required"));
-      if (!oneOf(p.suggested_class, DISTORTION_CLASS)) errors.push(err("payload.suggested_class", "Invalid class"));
+      if (!oneOf(p.suggested_class, DISTORTION_CLASS))
+        errors.push(err("payload.suggested_class", "Invalid class"));
       if ("confidence" in p && p.confidence != null && !inRange(p.confidence, 0, 1))
         errors.push(err("payload.confidence", "confidence must be 0..1"));
       if ("rationale" in p && p.rationale != null && !isString(p.rationale))
@@ -150,21 +169,26 @@ function validateByType(e: Record<string, unknown>, type: EventType): Validation
 
     case "classification.confirmed": {
       if (!isString(e.session_id)) errors.push(err("session_id", "session_id required"));
-      if (!oneOf(p.confirmed_class, DISTORTION_CLASS)) errors.push(err("payload.confirmed_class", "Invalid class"));
-      if (p.confirmed_by !== "human") errors.push(err("payload.confirmed_by", "Must be 'human'"));
+      if (!oneOf(p.confirmed_class, DISTORTION_CLASS))
+        errors.push(err("payload.confirmed_class", "Invalid class"));
+      if (p.confirmed_by !== "human")
+        errors.push(err("payload.confirmed_by", "Must be 'human'"));
       break;
     }
 
     case "protocol.selected": {
       if (!isString(e.session_id)) errors.push(err("session_id", "session_id required"));
-      if (!oneOf(p.protocol_type, REDUCTION_PROTOCOL)) errors.push(err("payload.protocol_type", "Invalid protocol"));
+      if (!oneOf(p.protocol_type, REDUCTION_PROTOCOL))
+        errors.push(err("payload.protocol_type", "Invalid protocol"));
       break;
     }
 
     case "protocol.executed": {
       if (!isString(e.session_id)) errors.push(err("session_id", "session_id required"));
-      if (!oneOf(p.protocol_type, REDUCTION_PROTOCOL)) errors.push(err("payload.protocol_type", "Invalid protocol"));
-      if ("output" in p && p.output != null && !isString(p.output)) errors.push(err("payload.output", "Must be string"));
+      if (!oneOf(p.protocol_type, REDUCTION_PROTOCOL))
+        errors.push(err("payload.protocol_type", "Invalid protocol"));
+      if ("output" in p && p.output != null && !isString(p.output))
+        errors.push(err("payload.output", "Must be string"));
       break;
     }
 
@@ -186,6 +210,7 @@ function validateByType(e: Record<string, unknown>, type: EventType): Validation
 
     case "continuity.calculated": {
       if (!isString(e.session_id)) errors.push(err("session_id", "session_id required"));
+
       requireField(p, "before", errors, "payload.before");
       requireField(p, "after", errors, "payload.after");
 
@@ -199,7 +224,8 @@ function validateByType(e: Record<string, unknown>, type: EventType): Validation
       checkBlock(p.before, "payload.before");
       checkBlock(p.after, "payload.after");
 
-      if (!isString(p.formula_version)) errors.push(err("payload.formula_version", "formula_version required"));
+      if (!isString(p.formula_version))
+        errors.push(err("payload.formula_version", "formula_version required"));
       break;
     }
 
@@ -210,7 +236,6 @@ function validateByType(e: Record<string, unknown>, type: EventType): Validation
 
       if ("intensity" in p && p.intensity != null && !oneOf(p.intensity, INTENSITY))
         errors.push(err("payload.intensity", "Invalid intensity"));
-
       if ("risk_level" in p && p.risk_level != null && !oneOf(p.risk_level, ["low","medium","high"] as const))
         errors.push(err("payload.risk_level", "Invalid risk_level"));
       break;
@@ -223,12 +248,12 @@ function validateByType(e: Record<string, unknown>, type: EventType): Validation
       if (!oneOf(p.to, ["active","mapped","reduced","integrated"] as const))
         errors.push(err("payload.to", "Invalid status"));
 
-      // Hard forbid regression in V1:
+      // V1: forbid regression
       const order = ["active","mapped","reduced","integrated"] as const;
       const fromIdx = order.indexOf(p.from as any);
       const toIdx = order.indexOf(p.to as any);
-      if (fromIdx === -1 || toIdx === -1) break;
-      if (toIdx < fromIdx) errors.push(err("payload.to", "Regression forbidden in V1"));
+      if (fromIdx !== -1 && toIdx !== -1 && toIdx < fromIdx)
+        errors.push(err("payload.to", "Regression forbidden in V1"));
       break;
     }
 
@@ -248,6 +273,8 @@ function validateByType(e: Record<string, unknown>, type: EventType): Validation
         errors.push(err("payload.from", "Invalid status"));
       if (!oneOf(p.to, ["active","unresolved","reduced"] as const))
         errors.push(err("payload.to", "Invalid status"));
+
+      // V1: do not reopen reduced
       if (p.from === "reduced" && p.to !== "reduced")
         errors.push(err("payload.to", "Cannot reopen reduced distortion in V1"));
       break;
@@ -265,7 +292,8 @@ function validateByType(e: Record<string, unknown>, type: EventType): Validation
     case "action.aligned.completed": {
       if (!isString(p.aligned_next_action) || p.aligned_next_action.trim().length === 0)
         errors.push(err("payload.aligned_next_action", "Required"));
-      if (!isISODate(p.completed_at)) errors.push(err("payload.completed_at", "Invalid ISO date"));
+      if (!isISODate(p.completed_at))
+        errors.push(err("payload.completed_at", "Invalid ISO date"));
       break;
     }
 
@@ -277,19 +305,17 @@ function validateByType(e: Record<string, unknown>, type: EventType): Validation
       if (!isNumber(p.steps_completed) || p.steps_completed < 0 || p.steps_completed > 9)
         errors.push(err("payload.steps_completed", "0..9"));
 
-      /// Guardrails:
-if (
-  p.outcome === "reduced" &&
-  (p.steps_completed == null || !isNumber(p.steps_completed) || p.steps_completed < 6)
-) {
-  errors.push(
-    err("payload.steps_completed", "Reduced requires >= 6 steps")
-  );
-}
+      // Guardrails (FIXED): reduced requires minimum steps
+      if (
+        p.outcome === "reduced" &&
+        (p.steps_completed == null || (p.steps_completed as number) < 6)
+      ) {
+        errors.push(err("payload.steps_completed", "Reduced requires >= 6 steps"));
+      }
+      break;
     }
 
     default:
-      // Exhaustive check for newly added event types
       errors.push(err("event_type", `No validator implemented for ${type}`));
   }
 
