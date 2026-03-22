@@ -1,32 +1,48 @@
 "use client";
 
 import { useTransition } from "react";
-import { resetEntries } from "@/app/session/actions";
+import { resetSessions } from "@/app/session/actions";
 
 export default function ResetButton() {
   const [isPending, startTransition] = useTransition();
 
-  function onReset() {
-    const ok = confirm(
-      "Reset all entries?\n\nThis will permanently delete all saved triggers/logs."
+  function handleReset() {
+    const confirmed = window.confirm(
+      "This will delete all saved sessions, events, and derived runtime cache for the current operator. Continue?",
     );
-    if (!ok) return;
+
+    if (!confirmed) return;
 
     startTransition(async () => {
       try {
-        await resetEntries();
-        alert("Reset complete.");
-        // Optional: force refresh so dashboard/logs reflect immediately
+        await resetSessions();
         window.location.reload();
-      } catch (e) {
-        alert(e instanceof Error ? e.message : "Reset failed.");
+      } catch (error) {
+        console.error("Reset failed:", error);
+        window.alert("Reset failed. Check console for details.");
       }
     });
   }
 
   return (
-    <button disabled={isPending} onClick={onReset}>
-      {isPending ? "Resetting…" : "Reset all entries"}
+    <button
+      type="button"
+      onClick={handleReset}
+      disabled={isPending}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "10px 14px",
+        borderRadius: 10,
+        border: "1px solid rgba(255,255,255,0.2)",
+        background: "rgba(255,255,255,0.03)",
+        color: "inherit",
+        cursor: isPending ? "not-allowed" : "pointer",
+        opacity: isPending ? 0.7 : 1,
+      }}
+    >
+      {isPending ? "Resetting…" : "Reset All Session Data"}
     </button>
   );
 }
