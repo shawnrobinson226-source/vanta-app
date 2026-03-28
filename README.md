@@ -1,64 +1,86 @@
 # VANTA — V1 Kernel
 
-VANTA is a deterministic cognitive system for reducing distortion, restoring continuity, and executing aligned action.
+VANTA is a deterministic cognitive system designed to reduce distortion, restore continuity, and execute aligned action.
 
-This repository contains the locked **V1 Kernel**:
-- 5-class distortion taxonomy
-- deterministic session engine
-- event ledger architecture
-- derived analytics layer
-- Next.js interface (Session, Dashboard, Logs, Settings)
+This repository contains the locked **V1 Kernel**: a working full-stack system with a defined taxonomy, session engine, persistence layer, and runtime dashboard.
 
 ---
 
-## ⚙️ Core Concept
+## ⚙️ What VANTA Does
 
-VANTA converts a raw internal trigger into a structured decision outcome:
+VANTA converts internal input into structured, actionable output:
 
 Trigger → Classification → Protocol → Action → Logged Event → Continuity Update
 
-No guessing. No abstraction drift. Fully deterministic.
+This system is:
+- deterministic (no guesswork)
+- schema-driven (database is source of truth)
+- auditable (logs + derived metrics)
+- stable (V1 locked)
 
 ---
 
-## 🧠 System Architecture
+## 🧠 Core Components
 
 ### 1. Session Engine (`/session`)
-Input → structured session → processed by engine → stored in DB
+Structured input → processed → stored → continuity updated
 
-### 2. Engine (`lib/engine/executionFlow.ts`)
-Pure deterministic logic:
-- distortion classification handling
+### 2. Engine Logic (`lib/engine/executionFlow.ts`)
 - severity calculation
+- distortion handling
 - continuity delta computation
 
 ### 3. Database (Turso / SQLite)
 
-Tables:
+Primary tables:
 - `entries` → session logs
 - `state_checks` → baseline state
 - `events` → immutable event ledger
-- `derived_*` → rebuildable analytics
 
-### 4. Dashboard (`/dashboard`)
-Read-only system state:
-- continuity score
-- active fractures
-- volatility band
-- alignment vectors
-
-### 5. Logs (`/logs`)
-Audit trail of sessions.
+Derived tables:
+- `derived_session_index`
+- `derived_recurrence_stats`
+- `derived_recovery_stats`
+- `derived_volatility`
 
 ---
 
-## 🧩 Distortion Taxonomy (V1 Locked)
+## 📊 Interface
 
+### `/`
+Entry point
+
+### `/session`
+Submit structured session input
+
+### `/dashboard`
+System state:
+- continuity score
+- alignment vectors
+- volatility band
+- recent sessions
+
+### `/logs`
+Audit trail of all sessions
+
+### `/settings`
+Reset system state
+
+---
+
+## 🧩 V1 Taxonomy (Locked)
+
+Distortion Classes:
 - narrative
 - emotional
 - behavioral
 - perceptual
 - continuity
+
+Outcomes:
+- reduced
+- unresolved
+- escalated
 
 ---
 

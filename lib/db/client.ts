@@ -1,4 +1,5 @@
-﻿import { createClient, type Client } from "@libsql/client";
+// /lib/db/client.ts
+import { createClient, type Client } from "@libsql/client";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { seedDb } from "./seed";

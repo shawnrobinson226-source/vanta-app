@@ -1,4 +1,5 @@
-﻿export const runtime = "nodejs";
+// /app/settings/page.tsx
+export const runtime = "nodejs";
 
 import ResetButton from "./reset-button";
 
