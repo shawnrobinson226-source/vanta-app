@@ -641,7 +641,9 @@ export async function getVolatilityBand(
   return volatility_band;
 }
 
-export async function getRecentSessions(limit = 50): Promise<SessionLogRow[]> {
+export async function getRecentSessions(
+  limit = 50,
+): Promise<SessionLogRow[]> {
   await initDbIfNeeded();
 
   const n = Math.max(1, Math.min(200, Number(limit) || 50));
@@ -671,18 +673,35 @@ export async function getRecentSessions(limit = 50): Promise<SessionLogRow[]> {
     const row = r as Record<string, unknown>;
 
     return {
-      id: readString(row, "id"),
-      trigger: readString(row, "trigger"),
-      distortion_class: parseDistortionClass(
-        readString(row, "distortion_class", "narrative"),
-      ),
-      protocol: readString(row, "protocol"),
-      next_action: readString(row, "next_action"),
-      outcome: parseOutcome(readString(row, "outcome", "unresolved")),
-      clarity_rating: readNumber(row, "clarity_rating", 0),
-      continuity_before: readNumber(row, "continuity_score_before", 0),
-      continuity_after: readNumber(row, "continuity_score_after", 0),
-      created_at: readString(row, "created_at"),
+      id: String(row.id ?? ""),
+      trigger: String(row.trigger ?? ""),
+      distortion_class: String(
+        row.distortion_class ?? "narrative",
+      ) as DistortionClass,
+
+      protocol:
+        typeof row.protocol === "string"
+          ? row.protocol
+          : row.protocol &&
+              typeof row.protocol === "object" &&
+              "label" in row.protocol
+            ? String((row.protocol as { label?: unknown }).label ?? "Unknown")
+            : "Unknown",
+
+      next_action:
+        typeof row.next_action === "string"
+          ? row.next_action
+          : row.next_action &&
+              typeof row.next_action === "object" &&
+              "label" in row.next_action
+            ? String((row.next_action as { label?: unknown }).label ?? "Unknown")
+            : "Unknown",
+
+      outcome: String(row.outcome ?? "unresolved") as SessionOutcome,
+      clarity_rating: Number(row.clarity_rating ?? 0),
+      continuity_before: Number(row.continuity_score_before ?? 0),
+      continuity_after: Number(row.continuity_score_after ?? 0),
+      created_at: String(row.created_at ?? ""),
     };
   });
 }
