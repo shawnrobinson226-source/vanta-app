@@ -1,29 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition } from "react";
 import { analyzeTrigger } from "@/lib/kernel/v1/analyze";
 import { submitSessionForm } from "./actions";
-
-const distortionOptions = [
-  { value: "narrative", label: "Narrative", hint: "False internal story or meaning layer." },
-  { value: "emotional", label: "Emotional", hint: "Disproportionate emotional reaction or overload." },
-  { value: "behavioral", label: "Behavioral", hint: "Action drift, avoidance, or contradiction in behavior." },
-  { value: "perceptual", label: "Perceptual", hint: "Misreading reality, context, or signal." },
-  { value: "continuity", label: "Continuity", hint: "Identity drift between values, intention, and action." },
-] as const;
-
-const protocolOptions = [
-  { value: "factual_rewrite", label: "Factual Rewrite" },
-  { value: "aligned_action", label: "Aligned Action" },
-  { value: "corrective_reflection", label: "Corrective Reflection" },
-  { value: "containment_practice", label: "Containment Practice" },
-] as const;
-
-const outcomeOptions = [
-  { value: "reduced", label: "Reduced" },
-  { value: "unresolved", label: "Unresolved" },
-  { value: "escalated", label: "Escalated" },
-] as const;
 
 export default function SessionPage() {
   const [preview, setPreview] = useState<any>(null);
@@ -40,119 +19,80 @@ export default function SessionPage() {
 
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-10">
-      <header className="space-y-3">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-zinc-500">
-          VANTA / Session Engine
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-100">
-          Deterministic Distortion Reduction Session
-        </h1>
-        <p className="max-w-3xl text-sm leading-6 text-zinc-400">
-          Input the trigger. VANTA will analyze the distortion in real time,
-          then you commit the structured correction.
-        </p>
-      </header>
+      <h1 className="text-2xl text-white">Session</h1>
 
-      <form action={submitSessionForm} className="space-y-8">
+      <form action={submitSessionForm} className="space-y-6">
         <input type="hidden" name="operator_id" value="op_legacy" />
 
         {/* TRIGGER */}
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6">
-          <h2 className="text-lg font-medium text-zinc-100 mb-2">1. Trigger Input</h2>
+        <textarea
+          name="trigger"
+          required
+          placeholder="What happened?"
+          onBlur={(e) => handleAnalyze(e.target.value)}
+          className="w-full border p-3 bg-black text-white"
+        />
 
-          <textarea
-            name="trigger"
-            required
-            rows={5}
-            placeholder="What happened?"
-            onBlur={(e) => handleAnalyze(e.target.value)}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-zinc-600"
-          />
-        </section>
-
-        {/* LIVE ANALYSIS */}
+        {/* PREVIEW */}
         {preview && (
-          <section className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6">
-            <h2 className="text-lg font-medium text-zinc-100 mb-4">
-              Live Analysis
-            </h2>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs text-zinc-500">Pattern</p>
-                <p className="text-sm text-zinc-200">{preview.fracture}</p>
-              </div>
-
-              <div>
-                <p className="text-xs text-zinc-500">Interpretation</p>
-                <p className="text-sm text-zinc-200">{preview.reframe}</p>
-              </div>
-
-              <div>
-                <p className="text-xs text-zinc-500">Suggested Action</p>
-                <ul className="text-sm text-zinc-200 list-disc ml-5">
-                  {preview.redirect.map((step: string, i: number) => (
-                    <li key={i}>{step}</li>
-                  ))}
-                </ul>
-              </div>
+          <div className="border p-4 bg-zinc-900 text-white space-y-3">
+            <div>
+              <strong>Fracture:</strong> {preview.fracture}
             </div>
-          </section>
+
+            <div>
+              <strong>Reframe:</strong> {preview.reframe}
+            </div>
+
+            <div>
+              <strong>Suggested Action:</strong>
+              <ul className="list-disc ml-5">
+                {Array.isArray(preview.redirect)
+                  ? preview.redirect.map((step: string, i: number) => (
+                      <li key={i}>{step}</li>
+                    ))
+                  : Array.isArray(preview.redirect?.steps)
+                  ? preview.redirect.steps.map((step: string, i: number) => (
+                      <li key={i}>{step}</li>
+                    ))
+                  : null}
+              </ul>
+            </div>
+          </div>
         )}
 
         {/* DISTORTION */}
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6">
-          <h2 className="text-lg font-medium text-zinc-100 mb-4">
-            2. Distortion Classification
-          </h2>
-
-          <fieldset className="grid gap-3 md:grid-cols-2">
-            {distortionOptions.map((option) => (
-              <label
-                key={option.value}
-                className="flex flex-col rounded-xl border border-zinc-800 bg-zinc-900 p-4"
-              >
-                <span className="flex items-center gap-3">
-                  <input
-                    type="radio"
-                    name="distortion_class"
-                    value={option.value}
-                    required
-                  />
-                  <span className="text-sm text-zinc-100">{option.label}</span>
-                </span>
-                <span className="mt-2 text-xs text-zinc-400">
-                  {option.hint}
-                </span>
-              </label>
-            ))}
-          </fieldset>
-        </section>
+        <select name="distortion_class" required className="w-full p-2 bg-black text-white">
+          <option value="">Select distortion</option>
+          <option value="narrative">Narrative</option>
+          <option value="emotional">Emotional</option>
+          <option value="behavioral">Behavioral</option>
+          <option value="perceptual">Perceptual</option>
+          <option value="continuity">Continuity</option>
+        </select>
 
         {/* ACTION */}
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6">
-          <h2 className="text-lg font-medium text-zinc-100 mb-4">
-            3. Next Action
-          </h2>
+        <textarea
+          name="next_action"
+          required
+          placeholder="Next action"
+          className="w-full border p-3 bg-black text-white"
+        />
 
-          <textarea
-            name="next_action"
-            required
-            rows={3}
-            placeholder="What is the next aligned action?"
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-zinc-100"
-          />
-        </section>
+        {/* OUTCOME */}
+        <select name="outcome" required className="w-full p-2 bg-black text-white">
+          <option value="">Select outcome</option>
+          <option value="reduced">Reduced</option>
+          <option value="unresolved">Unresolved</option>
+          <option value="escalated">Escalated</option>
+        </select>
 
-        {/* SUBMIT */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="rounded-xl bg-white px-5 py-3 text-sm font-medium text-black"
-          >
-            Save Session
-          </button>
-        </div>
+        <input type="number" name="clarity_0_10" min="0" max="10" required className="w-full p-2 bg-black text-white" />
+        <input type="number" name="steps_completed" min="0" max="9" required className="w-full p-2 bg-black text-white" />
+
+        <button type="submit" className="bg-white text-black px-4 py-2">
+          Save
+        </button>
       </form>
     </main>
   );
