@@ -123,22 +123,17 @@ function parseSessionForm(formData: FormData): ParsedSessionForm {
   const distortion_class = parseDistortionClass(
     asString(formData.get("distortion_class")),
   );
-  const origin = asString(formData.get("origin"));
-  const thought = asString(formData.get("thought"));
-  const emotion = asString(formData.get("emotion"));
-  const behavior = asString(formData.get("behavior"));
-  const protocol = asString(formData.get("protocol"));
+  const origin = asString(formData.get("origin")) || "local";
+  const thought = asString(formData.get("thought")) || trigger;
+  const emotion = asString(formData.get("emotion")) || "unspecified";
+  const behavior = asString(formData.get("behavior")) || next_action || "unspecified";
+  const protocol = asString(formData.get("protocol")) || "aligned_action";
   const next_action = asString(formData.get("next_action"));
-  const clarity_rating = clamp(asNumber(formData.get("clarity_rating"), 5), 0, 10);
+  const clarity_rating = clamp(asNumber(formData.get("clarity_rating") ?? formData.get("clarity_0_10"), 5), 0, 10);
   const outcome = parseOutcome(asString(formData.get("outcome")) || "reduced");
 
   if (!trigger) throw new Error("Trigger is required.");
-  if (!origin) throw new Error("Origin is required.");
-  if (!thought) throw new Error("Thought is required.");
-  if (!emotion) throw new Error("Emotion is required.");
-  if (!behavior) throw new Error("Behavior is required.");
-  if (!protocol) throw new Error("Protocol is required.");
-  if (!next_action) throw new Error("Next action is required.");
+            if (!next_action) throw new Error("Next action is required.");
 
   return {
     operator_id,
@@ -768,3 +763,4 @@ export async function resetSessions() {
 
   return { ok: true as const };
 }
+
