@@ -43,3 +43,5 @@ data/*.db
 next-env.d.ts
 
 *.bak.*
+
+tmp_*.py
