@@ -9,3 +9,18 @@ export async function GET() {
     return apiError(err instanceof Error ? err.message : "Unknown error");
   }
 }
+export async function POST() {
+  return apiError("Method not allowed", 405);
+}
+
+export async function PUT() {
+  return apiError("Method not allowed", 405);
+}
+
+export async function PATCH() {
+  return apiError("Method not allowed", 405);
+}
+
+export async function DELETE() {
+  return apiError("Method not allowed", 405);
+}
