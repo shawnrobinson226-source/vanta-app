@@ -1,5 +1,6 @@
 ﻿import Link from "next/link";
 import { getDashboardState, getVolatilityBand } from "./session/actions";
+import { withTimeout } from "@/lib/utils/withTimeout";
 
 function Card({
   title,
@@ -58,8 +59,8 @@ async function getHomeStateSafe(): Promise<{
 }> {
   try {
     const [state, volatilityBand] = await Promise.all([
-      getDashboardState("op_legacy"),
-      getVolatilityBand("op_legacy"),
+      withTimeout(getDashboardState("op_legacy"), 3000),
+      withTimeout(getVolatilityBand("op_legacy"), 3000),
     ]);
 
     return {
