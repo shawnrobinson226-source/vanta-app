@@ -12,7 +12,13 @@ export async function GET(req: Request) {
   }
 
   try {
-    const logs = await withTimeout(getRecentSessions(200), 2000);
+    const operatorId =
+  req.headers.get("x-operator-id") ?? "op_legacy";
+
+const logs = await withTimeout(
+  getRecentSessions(operatorId, 200),
+  2000
+);
     return apiOk({ logs });
   } catch (err) {
     return apiError(err instanceof Error ? err.message : "Unknown error");

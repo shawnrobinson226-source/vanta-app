@@ -108,10 +108,49 @@ export async function listLogs(limit: number = 10): Promise<LogEntry[]> {
     args: [limit],
   });
 
-  return res.rows.map((row: any) => ({
-    ...row,
-    tags: row.tags ? JSON.parse(row.tags) : undefined,
-  }));
+  return (res.rows as Record<string, unknown>[]).map((row) => {
+    const parsedTags =
+      typeof row.tags === "string"
+        ? (JSON.parse(row.tags) as unknown)
+        : undefined;
+
+    return {
+      id: String(row.id ?? ""),
+      timestamp: String(row.timestamp ?? ""),
+      type: String(row.type ?? "NOTE") as LogEntry["type"],
+      message: String(row.message ?? ""),
+      stateId:
+        typeof row.stateId === "string"
+          ? (row.stateId as LogEntry["stateId"])
+          : undefined,
+      modeId:
+        typeof row.modeId === "string"
+          ? (row.modeId as LogEntry["modeId"])
+          : undefined,
+      toolId:
+        typeof row.toolId === "string"
+          ? (row.toolId as LogEntry["toolId"])
+          : undefined,
+      loopId:
+        typeof row.loopId === "string"
+          ? (row.loopId as LogEntry["loopId"])
+          : undefined,
+      loopRunId: typeof row.loopRunId === "string" ? row.loopRunId : undefined,
+      stepOrder: typeof row.stepOrder === "number" ? row.stepOrder : undefined,
+      stepLabel: typeof row.stepLabel === "string" ? row.stepLabel : undefined,
+      status: row.status === "done" || row.status === "skipped" ? row.status : undefined,
+      note: typeof row.note === "string" ? row.note : undefined,
+      level:
+        row.level === 0 || row.level === 1 || row.level === 2 || row.level === 3
+          ? row.level
+          : undefined,
+      tags: Array.isArray(parsedTags)
+        ? parsedTags
+            .filter((tag): tag is string => typeof tag === "string")
+            .map((tag) => tag)
+        : undefined,
+    } satisfies LogEntry;
+  });
 }
 
 export async function clearLogs(): Promise<void> {

@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
@@ -322,6 +322,96 @@ function applyContinuityUpdate(
     continuity_score,
     updated_at: new Date().toISOString(),
   };
+}
+
+
+
+// âœ… CORE SAVE FUNCTION (API + Server Action safe)
+export async function saveSessionCore(input: {
+  operator_id: string;
+  trigger: string;
+  distortion_class: string;
+  next_action: string;
+}) {
+  const { operator_id, trigger, distortion_class, next_action } = input;
+
+  if (!trigger) throw new Error("Trigger required");
+  if (!distortion_class) throw new Error("Distortion class required");
+  if (!next_action) throw new Error("Next action is required.");
+
+  await initDbIfNeeded();
+
+  const guardResult = runGuards({
+    stability: 5,
+    reference: true,
+    impact: 3,
+  });
+
+  if (!guardResult.allowed) {
+    throw new Error("Guard blocked session");
+  }
+
+  const engineInput: SessionInput = {
+    trigger,
+    distortionClass: distortion_class as DistortionClass,
+    origin: "api",
+    thought: trigger,
+    emotion: "unspecified",
+    behavior: "unspecified",
+    protocol: "aligned_action",
+    nextAction: next_action,
+    clarityRating: 5,
+    outcome: "reduced",
+  };
+
+  const engineResult = runSessionEngine(engineInput);
+  const sessionId = randomUUID();
+
+  const previous = await getOrCreateContinuityState(operator_id);
+  const next = applyContinuityUpdate(previous, engineResult.continuityDelta);
+
+  await db.execute({
+    sql: `
+      INSERT INTO sessions (
+        id,
+        operator_id,
+        trigger,
+        distortion_class,
+        origin,
+        thought,
+        emotion,
+        behavior,
+        protocol,
+        next_action,
+        clarity_rating,
+        outcome,
+        steps_completed,
+        continuity_score_before,
+        continuity_score_after,
+        created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    args: [
+      sessionId,
+      operator_id,
+      trigger,
+      engineResult.distortion.class,
+      "api",
+      trigger,
+      "unspecified",
+      "unspecified",
+      "aligned_action",
+      next_action,
+      engineResult.session.exitStateClarityRating,
+      engineResult.session.outcome,
+      engineResult.session.stepsCompleted,
+      previous.continuity_score,
+      next.continuity_score,
+      new Date().toISOString(),
+    ],
+  });
+
+  return { ok: true, sessionId };
 }
 
 export async function submitSessionForm(formData: FormData) {
@@ -697,7 +787,7 @@ export async function getVolatilityBand(
   return volatility_band;
 }
 
-export async function getRecentSessions(limit = 50): Promise<SessionLogRow[]> {
+export async function getRecentSessions(operatorId: string, limit = 50): Promise<SessionLogRow[]> {
   await initDbIfNeeded();
 
   const n = Math.max(1, Math.min(200, Number(limit) || 50));
@@ -720,7 +810,7 @@ export async function getRecentSessions(limit = 50): Promise<SessionLogRow[]> {
       ORDER BY created_at DESC
       LIMIT ?
     `,
-    args: ["op_legacy", n],
+    args: [operatorId, n],
   });
 
   return (res.rows ?? []).map((r) => {
@@ -760,37 +850,37 @@ export async function getRecentSessions(limit = 50): Promise<SessionLogRow[]> {
   });
 }
 
-export async function resetSessions() {
+export async function resetSessions(operatorId = "op_legacy") {
   await initDbIfNeeded();
 
   await db.execute({
     sql: `DELETE FROM sessions WHERE operator_id = ?`,
-    args: ["op_legacy"],
+    args: [operatorId],
   });
 
   await db.execute({
     sql: `DELETE FROM events WHERE operator_id = ?`,
-    args: ["op_legacy"],
+    args: [operatorId],
   });
 
   await db.execute({
     sql: `DELETE FROM derived_session_index WHERE operator_id = ?`,
-    args: ["op_legacy"],
+    args: [operatorId],
   });
 
   await db.execute({
     sql: `DELETE FROM derived_recurrence_stats WHERE operator_id = ?`,
-    args: ["op_legacy"],
+    args: [operatorId],
   });
 
   await db.execute({
     sql: `DELETE FROM derived_recovery_stats WHERE operator_id = ?`,
-    args: ["op_legacy"],
+    args: [operatorId],
   });
 
   await db.execute({
     sql: `DELETE FROM derived_volatility WHERE operator_id = ?`,
-    args: ["op_legacy"],
+    args: [operatorId],
   });
 
   await db.execute({
@@ -812,7 +902,7 @@ export async function resetSessions() {
         continuity_score = excluded.continuity_score,
         updated_at = excluded.updated_at
     `,
-    args: ["op_legacy", 50, 50, 50, 50, 50],
+    args: [operatorId, 50, 50, 50, 50, 50],
   });
 
   revalidatePath("/");

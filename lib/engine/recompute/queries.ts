@@ -4,15 +4,17 @@
  * You only need to adapt THIS file if your DB client differs.
  * Assumption: /lib/db/client exports `db` with `execute({ sql, args })`.
  */
+import type { InValue } from "@libsql/client";
 import { db } from "@/lib/db/client";
 
-type DBRow = Record<string, any>;
+export type DBRow = Record<string, unknown>;
 
-async function exec(sql: string, args: any[] = []): Promise<{ rows: DBRow[] }> {
+async function exec(sql: string, args: InValue[] = []): Promise<{ rows: DBRow[] }> {
   // Adapt here if your client differs:
   const res = await db.execute({ sql, args });
   // libsql/turso typically returns { rows }
-  return { rows: (res as any).rows ?? [] };
+  const rows = (res as { rows?: unknown[] }).rows ?? [];
+  return { rows: rows as DBRow[] };
 }
 
 /**
@@ -262,7 +264,7 @@ export async function upsertVolatility(row: {
   );
 }
 
-function safeJson(x: any): any {
+function safeJson(x: unknown): unknown {
   if (x == null) return null;
   if (typeof x === "object") return x;
   try {

@@ -1,10 +1,15 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { resetSessions } from "@/app/session/actions";
 
 export default function ResetButton() {
   const [isPending, startTransition] = useTransition();
+  const [operatorId] = useState(() => {
+    if (typeof window === "undefined") return "op_legacy";
+    const stored = window.localStorage.getItem("vanta_operator_id");
+    return stored && stored.trim() ? stored.trim() : "op_legacy";
+  });
 
   function handleReset() {
     const confirmed = window.confirm(
@@ -15,7 +20,7 @@ export default function ResetButton() {
 
     startTransition(async () => {
       try {
-        await resetSessions();
+        await resetSessions(operatorId);
         window.location.reload();
       } catch (error) {
         console.error("Reset failed:", error);

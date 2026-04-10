@@ -243,17 +243,20 @@ function validateByType(
 
     case "fracture.status.changed": {
       if (!isString(e.fracture_id)) errors.push(err("fracture_id", "fracture_id required"));
-      if (!oneOf(p.from, ["active","mapped","reduced","integrated"] as const))
+      const statusOrder = ["active","mapped","reduced","integrated"] as const;
+      if (!oneOf(p.from, statusOrder))
         errors.push(err("payload.from", "Invalid status"));
-      if (!oneOf(p.to, ["active","mapped","reduced","integrated"] as const))
+      if (!oneOf(p.to, statusOrder))
         errors.push(err("payload.to", "Invalid status"));
 
       // V1: forbid regression
-      const order = ["active","mapped","reduced","integrated"] as const;
-      const fromIdx = order.indexOf(p.from as any);
-      const toIdx = order.indexOf(p.to as any);
-      if (fromIdx !== -1 && toIdx !== -1 && toIdx < fromIdx)
-        errors.push(err("payload.to", "Regression forbidden in V1"));
+      if (oneOf(p.from, statusOrder) && oneOf(p.to, statusOrder)) {
+        const fromIdx = statusOrder.indexOf(p.from);
+        const toIdx = statusOrder.indexOf(p.to);
+        if (toIdx < fromIdx) {
+          errors.push(err("payload.to", "Regression forbidden in V1"));
+        }
+      }
       break;
     }
 
@@ -308,7 +311,7 @@ function validateByType(
       // Guardrails (FIXED): reduced requires minimum steps
       if (
         p.outcome === "reduced" &&
-        (p.steps_completed == null || (p.steps_completed as number) < 6)
+        (!isNumber(p.steps_completed) || p.steps_completed < 6)
       ) {
         errors.push(err("payload.steps_completed", "Reduced requires >= 6 steps"));
       }

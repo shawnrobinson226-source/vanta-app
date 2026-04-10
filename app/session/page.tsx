@@ -16,6 +16,12 @@ type PreviewValue =
   | null
   | undefined;
 
+type Preview = {
+  fracture?: PreviewValue;
+  reframe?: PreviewValue;
+  redirect?: unknown;
+};
+
 function renderPreviewValue(value: PreviewValue) {
   if (typeof value === "string") return value;
   if (!value || typeof value !== "object") return "Unknown";
@@ -47,7 +53,7 @@ function renderRedirectSteps(redirect: unknown): string[] {
 }
 
 export default function SessionPage() {
-  const [preview, setPreview] = useState<any>(null);
+  const [preview, setPreview] = useState<Preview | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleAnalyze(trigger: string) {

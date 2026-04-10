@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import {
   getRecentSessions,
   resetSessions,
@@ -67,25 +67,31 @@ function deltaText(before: number, after: number) {
   return delta > 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
 }
 
-export default function LogsClient() {
-  const [limit, setLimit] = useState(50);
-  const [rows, setRows] = useState<SessionLogRow[]>([]);
+type LogsClientProps = {
+  initialRows: SessionLogRow[];
+  operatorId?: string;
+  initialLimit?: number;
+};
+
+export default function LogsClient({
+  initialRows,
+  operatorId = "op_legacy",
+  initialLimit = 50,
+}: LogsClientProps) {
+  const [limit, setLimit] = useState(initialLimit);
+  const [rows, setRows] = useState<SessionLogRow[]>(initialRows);
   const [msg, setMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   async function load(nextLimit = limit) {
     setMsg(null);
     try {
-      const data = await getRecentSessions(nextLimit);
+      const data = await getRecentSessions(operatorId, nextLimit);
       setRows(data);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Failed to load session logs.");
     }
   }
-
-  useEffect(() => {
-    void load();
-  }, []);
 
   function apply() {
     startTransition(async () => {
@@ -103,7 +109,7 @@ export default function LogsClient() {
     setMsg(null);
     startTransition(async () => {
       try {
-        await resetSessions();
+        await resetSessions(operatorId);
         await load(limit);
         setMsg("All sessions were cleared.");
       } catch (e) {

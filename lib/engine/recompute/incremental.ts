@@ -11,6 +11,7 @@ import {
 import { avgDaysBetween, isoDaysAgo, isoNow, variance } from "@/lib/engine/recompute/math";
 import {
   getSessionEvents,
+  type DBRow,
   upsertSessionIndex,
   getSessionIndexWindow,
   upsertRecurrence,
@@ -35,20 +36,22 @@ export async function recomputeIncremental(operator_id: string, session_id: stri
     throw new Error(`recomputeIncremental: missing session.closed for session_id=${session_id}`);
   }
 
-  const outcome = String(closed.payload?.outcome ?? "");
-  const clarity = Number(closed.payload?.exit_state_clarity_rating ?? NaN);
-  const steps = Number(closed.payload?.steps_completed ?? NaN);
+  const closedPayload = asObject(closed.payload);
+  const outcome = asString(closedPayload.outcome);
+  const clarity = asNumber(closedPayload.exit_state_clarity_rating);
+  const steps = asNumber(closedPayload.steps_completed);
 
-  const confirmedClass = latest["classification.confirmed"]?.payload?.confirmed_class ?? null;
-  const protocolType = latest["protocol.selected"]?.payload?.protocol_type ?? null;
+  const classificationPayload = asObject(latest["classification.confirmed"]?.payload);
+  const protocolPayload = asObject(latest["protocol.selected"]?.payload);
+  const confirmedClass = classificationPayload.confirmed_class ?? null;
+  const protocolType = protocolPayload.protocol_type ?? null;
 
-  const continuity = latest["continuity.calculated"]?.payload ?? null;
-  const beforeScore = continuity?.before?.continuity_score ?? null;
-  const afterScore = continuity?.after?.continuity_score ?? null;
-  const formulaVersion = continuity?.formula_version ?? null;
+  const continuity = asObject(latest["continuity.calculated"]?.payload);
+  const beforeScore = asNumber(asObject(continuity.before).continuity_score);
+  const afterScore = asNumber(asObject(continuity.after).continuity_score);
+  const formulaVersion = continuity.formula_version ?? null;
 
-  const delta =
-    typeof beforeScore === "number" && typeof afterScore === "number" ? afterScore - beforeScore : null;
+  const delta = Number.isFinite(beforeScore) && Number.isFinite(afterScore) ? afterScore - beforeScore : null;
 
   const isComplete =
     !!confirmedClass &&
@@ -66,9 +69,9 @@ export async function recomputeIncremental(operator_id: string, session_id: stri
     outcome,
     clarity_rating: Number.isFinite(clarity) ? clarity : 0,
     steps_completed: Number.isFinite(steps) ? steps : 0,
-    continuity_before: typeof beforeScore === "number" ? beforeScore : null,
-    continuity_after: typeof afterScore === "number" ? afterScore : null,
-    continuity_delta: typeof delta === "number" ? delta : null,
+    continuity_before: Number.isFinite(beforeScore) ? beforeScore : null,
+    continuity_after: Number.isFinite(afterScore) ? afterScore : null,
+    continuity_delta: Number.isFinite(delta) ? delta : null,
     protocol_type: protocolType ? String(protocolType) : null,
     formula_version: formulaVersion ? String(formulaVersion) : null,
     is_complete: isComplete ? 1 : 0,
@@ -87,7 +90,8 @@ export async function recomputeIncremental(operator_id: string, session_id: stri
   }
 }
 
-type LedgerEvent = { event_type: string; occurred_at: string; payload: any };
+type LedgerEvent = { event_type: string; occurred_at: string; payload: unknown };
+type SessionIndexRow = DBRow;
 
 function pickLatest(events: LedgerEvent[]) {
   const map: Record<string, LedgerEvent | undefined> = {};
@@ -95,18 +99,31 @@ function pickLatest(events: LedgerEvent[]) {
   return map;
 }
 
+function asString(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback;
+}
+
+function asNumber(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+function asObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
 async function recomputeRecurrence(operator_id: string, windowDays: number) {
   const since = isoDaysAgo(windowDays);
-  const rows = await getSessionIndexWindow(operator_id, since);
+  const rows = (await getSessionIndexWindow(operator_id, since)) as SessionIndexRow[];
 
   for (const cls of DISTORTION_CLASSES) {
-    const byClass = rows.filter((r: any) => r.confirmed_class === cls);
+    const byClass = rows.filter((r) => asString(r.confirmed_class) === cls);
 
     const count = byClass.length;
-    const lastSeen = count ? String(byClass[byClass.length - 1].occurred_at) : null;
+    const lastSeen = count ? asString(byClass[byClass.length - 1].occurred_at, "") : null;
 
     // avg days between occurrences within this window
-    const times = byClass.map((r: any) => String(r.occurred_at));
+    const times = byClass.map((r) => asString(r.occurred_at, ""));
     const avgBetween = avgDaysBetween(times);
 
     await upsertRecurrence({
@@ -124,10 +141,10 @@ async function recomputeRecurrence(operator_id: string, windowDays: number) {
 async function recomputeRecovery(operator_id: string, windowDays: number) {
   // Use the same window read; compute per class
   const since = isoDaysAgo(windowDays);
-  const rows = await getSessionIndexWindow(operator_id, since);
+  const rows = (await getSessionIndexWindow(operator_id, since)) as SessionIndexRow[];
 
   for (const cls of DISTORTION_CLASSES) {
-    const byClass = rows.filter((r: any) => r.confirmed_class === cls);
+    const byClass = rows.filter((r) => asString(r.confirmed_class) === cls);
 
     const sampleSize = byClass.length;
     if (!sampleSize) {
@@ -145,17 +162,17 @@ async function recomputeRecovery(operator_id: string, windowDays: number) {
     }
 
     // Reduced definition (V1-safe): outcome=reduced AND clarity>=threshold AND steps>=threshold
-    const reducedCount = byClass.filter((r: any) => {
-      const outcome = String(r.outcome);
-      const clarity = Number(r.clarity_rating);
-      const steps = Number(r.steps_completed ?? 9); // fallback if not present in select
+    const reducedCount = byClass.filter((r) => {
+      const outcome = asString(r.outcome);
+      const clarity = asNumber(r.clarity_rating);
+      const steps = asNumber(r.steps_completed ?? 9); // fallback if not present in select
       return outcome === "reduced" && clarity >= REDUCED_MIN_CLARITY && steps >= REDUCED_MIN_STEPS;
     }).length;
 
-    const escalatedCount = byClass.filter((r: any) => String(r.outcome) === "escalated").length;
+    const escalatedCount = byClass.filter((r) => asString(r.outcome) === "escalated").length;
 
     // avg clarity delta within class (simple: successive difference in window)
-    const claritySeries = byClass.map((r: any) => Number(r.clarity_rating)).filter(Number.isFinite);
+    const claritySeries = byClass.map((r) => asNumber(r.clarity_rating)).filter(Number.isFinite);
     let avgClarityDelta: number | null = null;
     if (claritySeries.length >= 2) {
       const deltas: number[] = [];
@@ -178,12 +195,12 @@ async function recomputeRecovery(operator_id: string, windowDays: number) {
 
 async function recomputeVolatility(operator_id: string, windowDays: number) {
   const since = isoDaysAgo(windowDays);
-  const rows = await getSessionIndexSince(operator_id, since);
+  const rows = (await getSessionIndexSince(operator_id, since)) as SessionIndexRow[];
 
-  const clarity = rows.map((r: any) => Number(r.clarity_rating)).filter(Number.isFinite);
+  const clarity = rows.map((r) => asNumber(r.clarity_rating)).filter(Number.isFinite);
   const cont = rows
-    .map((r: any) => Number(r.continuity_after))
-    .filter((n: number) => Number.isFinite(n));
+    .map((r) => asNumber(r.continuity_after))
+    .filter(Number.isFinite);
 
   const clarityVar = variance(clarity);
   const contVar = variance(cont);

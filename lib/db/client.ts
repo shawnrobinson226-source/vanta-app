@@ -5,11 +5,8 @@ import path from "node:path";
 import { seedDb } from "./seed";
 
 declare global {
-  // eslint-disable-next-line no-var
   var __vantaDbClient: Client | undefined;
-  // eslint-disable-next-line no-var
   var __vantaDbInitialized: boolean | undefined;
-  // eslint-disable-next-line no-var
   var __vantaDbInitPromise: Promise<void> | undefined;
 }
 

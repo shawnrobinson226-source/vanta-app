@@ -10,9 +10,12 @@ export async function GET(req: Request) {
     return apiError("Rate limit exceeded", 429);
   }
   try {
+    const operatorId =
+      req.headers.get("x-operator-id") ?? "op_legacy";
+
     const [state, volatility] = await Promise.all([
-      withTimeout(getDashboardState("op_legacy"), 3000),
-      withTimeout(getVolatilityBand("op_legacy"), 3000),
+      withTimeout(getDashboardState(operatorId), 3000),
+      withTimeout(getVolatilityBand(operatorId), 3000),
     ]);
     return apiOk({ ...state, volatilityBand: volatility });
   } catch (err) {
