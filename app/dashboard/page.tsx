@@ -59,7 +59,7 @@ export default async function DashboardPage() {
         </p>
       </header>
 
-      <section className="grid gap-5 md:grid-cols-3">
+      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6">
           <p className="text-sm text-zinc-200">Continuity Score</p>
           <p
@@ -92,6 +92,48 @@ export default async function DashboardPage() {
           <p className="mt-3 text-sm text-zinc-500">
             Derived stability cache. Low is steadier. High means drift risk.
           </p>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6">
+          <p className="text-sm text-zinc-200">Distortion Frequency</p>
+          <p className="mt-2 text-sm text-zinc-400">
+            Which patterns show up most often
+          </p>
+          <div className="mt-3 space-y-1 text-sm text-zinc-100">
+            <p>narrative: —</p>
+            <p>emotional: —</p>
+            <p>behavioral: —</p>
+            <p>perceptual: —</p>
+            <p>continuity: —</p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6">
+          <p className="text-sm text-zinc-200">Outcome Distribution</p>
+          <p className="mt-2 text-sm text-zinc-400">
+            How your situations are resolving
+          </p>
+          <div className="mt-3 space-y-1 text-sm text-zinc-100">
+            <p>reduced: —</p>
+            <p>unresolved: —</p>
+            <p>escalated: —</p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6">
+          <p className="text-sm text-zinc-200">Stability Trend</p>
+          <p className="mt-2 text-sm text-zinc-400">
+            Short-term direction of your outcomes
+          </p>
+          <p className="mt-3 text-xl font-semibold text-zinc-100">→ neutral</p>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6">
+          <p className="text-sm text-zinc-200">Continuity Status</p>
+          <p className="mt-2 text-sm text-zinc-400">
+            Overall system stability based on recent outcomes
+          </p>
+          <p className="mt-3 text-xl font-semibold text-zinc-100">→ forming</p>
         </div>
       </section>
 
