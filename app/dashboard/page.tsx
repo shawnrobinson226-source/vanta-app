@@ -182,6 +182,10 @@ export default async function DashboardPage() {
             {continuityStatus}
           </p>
         </div>
+
+        <p className="md:col-span-2 xl:col-span-4 text-xs text-zinc-500">
+          More reduced = improvement. More escalated = instability.
+        </p>
       </section>
 
       <section className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6">
