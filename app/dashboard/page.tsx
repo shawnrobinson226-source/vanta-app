@@ -230,6 +230,12 @@ export default async function DashboardPage() {
           <p className="mt-3 text-sm leading-6 text-zinc-100">
             {recommendedNextStep}
           </p>
+          <a
+            href="/session"
+            className="mt-4 inline-flex rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-100 transition hover:border-zinc-500"
+          >
+            Go to Session
+          </a>
         </div>
 
         <p className="md:col-span-2 xl:col-span-4 text-xs text-zinc-500">
