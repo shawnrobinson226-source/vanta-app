@@ -73,19 +73,58 @@ export default async function DashboardPage() {
 
   const { reduced, unresolved, escalated } = outcomeDistribution;
 
-  const stabilityTrend =
+  const stabilityTrendKey =
     reduced >= escalated + 2 && reduced >= unresolved
-      ? "↑ improving"
+      ? "improving"
       : escalated >= reduced + 2 && escalated >= unresolved
+        ? "unstable"
+        : "neutral";
+
+  const continuityStatusKey =
+    reduced >= escalated + 2 && reduced >= unresolved
+      ? "stable"
+      : escalated >= reduced + 2 || unresolved > reduced
+        ? "unstable"
+        : "forming";
+
+  const stabilityTrend =
+    stabilityTrendKey === "improving"
+      ? "↑ improving"
+      : stabilityTrendKey === "unstable"
         ? "↓ unstable"
         : "→ neutral";
 
   const continuityStatus =
-    reduced >= escalated + 2 && reduced >= unresolved
+    continuityStatusKey === "stable"
       ? "↑ stable"
-      : escalated >= reduced + 2 || unresolved > reduced
+      : continuityStatusKey === "unstable"
         ? "↓ unstable"
         : "→ forming";
+
+  const dominantDistortion = (
+    Object.entries(distortionFrequency) as Array<
+      [keyof typeof distortionFrequency, number]
+    >
+  ).reduce(
+    (currentMax, nextEntry) =>
+      nextEntry[1] > currentMax[1] ? nextEntry : currentMax,
+    ["narrative", distortionFrequency.narrative],
+  )[0];
+
+  const recommendedNextStep =
+    continuityStatusKey === "unstable"
+      ? "Start a new session now and reduce the current instability before doing anything else."
+      : dominantDistortion === "behavioral" && unresolved >= reduced
+        ? "Run a new session focused on repeated behavior patterns and define one concrete next action."
+        : dominantDistortion === "emotional" && stabilityTrendKey !== "improving"
+          ? "Run a new session on the current emotional trigger and reduce reactivity before acting."
+          : dominantDistortion === "narrative"
+            ? "Review the recurring narrative pattern and run a session to convert it into a concrete action path."
+            : continuityStatusKey === "forming"
+              ? "Keep the system moving: log the next real trigger and continue building consistency."
+              : continuityStatusKey === "stable" && reduced >= unresolved
+                ? "Maintain the current pattern. Review logs and continue executing without adding complexity."
+                : "Start a new session and clarify the current trigger before making the next move.";
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-10">
@@ -180,6 +219,16 @@ export default async function DashboardPage() {
           </p>
           <p className="mt-3 text-xl font-semibold text-zinc-100">
             {continuityStatus}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6 md:col-span-2 xl:col-span-2">
+          <p className="text-sm text-zinc-200">Recommended Next Step</p>
+          <p className="mt-2 text-sm text-zinc-400">
+            Priority action based on current pattern
+          </p>
+          <p className="mt-3 text-sm leading-6 text-zinc-100">
+            {recommendedNextStep}
           </p>
         </div>
 
