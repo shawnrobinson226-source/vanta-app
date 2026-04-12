@@ -91,3 +91,34 @@ Outcomes:
 ```bash
 git clone https://github.com/shawnrobinson226-source/vanta-app.git
 cd vanta-app
+
+## API Contract (V1)
+
+The VANTA system exposes a read-only API layer for inspecting runtime state.
+
+All endpoints are versioned under:
+
+
+/api/v1
+
+
+### Available Endpoints
+
+- `GET /api/v1/session` → recent sessions
+- `GET /api/v1/logs` → extended logs
+- `GET /api/v1/state` → continuity + system snapshot
+- `GET /api/v1/health` → system health check
+
+### Contract Reference
+
+See full specification:
+
+
+docs/api-contract.md
+
+
+### V1 Constraints
+
+- Read-only API
+- No external mutation of system state
+- VANTA remains the source of truth for all logic and scoring

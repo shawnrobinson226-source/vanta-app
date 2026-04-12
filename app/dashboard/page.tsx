@@ -61,15 +61,15 @@ export default async function DashboardPage() {
 
       <section className="grid gap-5 md:grid-cols-3">
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6">
-          <p className="text-sm text-zinc-400">Continuity Score</p>
+          <p className="text-sm text-zinc-200">Continuity Score</p>
           <p
-            className={`mt-3 text-5xl font-semibold tracking-tight ${continuityTone(
+            className={`mt-3 text-5xl font-bold tracking-tight ${continuityTone(
               continuity.continuity_score,
             )}`}
           >
             {Math.round(continuity.continuity_score)}
           </p>
-          <p className="mt-3 text-sm text-zinc-500">
+          <p className="mt-3 text-sm text-zinc-300">
             Updated {formatDate(continuity.updated_at)}
           </p>
         </div>
@@ -110,7 +110,7 @@ export default async function DashboardPage() {
                 <span className="text-sm font-medium text-zinc-200">
                   {dimension.label}
                 </span>
-                <span className="text-sm text-zinc-400">
+                <span className="text-sm text-zinc-200">
                   {Math.round(dimension.value)}
                 </span>
               </div>
@@ -173,16 +173,16 @@ export default async function DashboardPage() {
                       <td className="max-w-[26rem] px-4 py-4 align-top text-zinc-100">
                         {session.trigger}
                       </td>
-                      <td className="px-4 py-4 align-top capitalize text-zinc-300">
+                      <td className="px-4 py-4 align-top capitalize text-zinc-100">
                         {session.distortion_class}
                       </td>
                       <td className="px-4 py-4 align-top capitalize text-zinc-300">
                         {session.outcome}
                       </td>
-                      <td className="px-4 py-4 align-top text-zinc-300">
+                      <td className="px-4 py-4 align-top text-zinc-100">
                         {session.clarity_rating}
                       </td>
-                      <td className="px-4 py-4 align-top text-zinc-300">
+                      <td className="px-4 py-4 align-top text-zinc-100">
                         {deltaText}
                       </td>
                       <td className="px-4 py-4 align-top text-zinc-500">

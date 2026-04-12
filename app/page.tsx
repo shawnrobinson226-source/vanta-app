@@ -96,6 +96,28 @@ export default async function HomePage() {
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-10">
       <header className="space-y-4">
+        <div className="space-y-3">
+  <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-zinc-50">
+    Turn confusion into clear next actions.
+  </h1>
+
+  <p className="max-w-3xl text-base leading-7 text-zinc-300">
+    VANTA takes any situation, breaks it down, and gives you a structured path forward — so you can act instead of overthink.
+  </p>
+
+  <p className="text-sm text-zinc-400">
+    Classify. Execute. Track. Stabilize.
+  </p>
+
+  <div className="pt-2">
+    <Link
+      href="/session"
+      className="rounded-xl bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-white"
+    >
+      Start Session
+    </Link>
+  </div>
+</div>
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-zinc-500">
           VANTA / Entry Gate
         </p>
@@ -117,13 +139,7 @@ export default async function HomePage() {
         ) : null}
 
         <div className="flex flex-wrap gap-3 pt-2">
-          <Link
-            href="/session"
-            className="rounded-xl border border-zinc-700 bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-950 transition hover:bg-white"
-          >
-            Enter Session
-          </Link>
-
+        
           <Link
             href="/dashboard"
             className="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-100 transition hover:border-zinc-500"
