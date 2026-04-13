@@ -131,6 +131,13 @@ export default function SessionPage() {
       <form action={submitSessionForm} className="space-y-6">
         <input type="hidden" name="operator_id" value="op_legacy" />
 
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-zinc-100">Quick Check</p>
+          <p className="text-sm text-zinc-300">
+            Confirm this is a real situation you can act on right now.
+          </p>
+        </div>
+
         <PreflightChecklist />
 
         <div className="space-y-2">
