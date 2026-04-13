@@ -221,15 +221,18 @@ export default function SessionPage() {
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-zinc-100" htmlFor="next_action">
-            Next action
+            Execution Step
           </label>
           <textarea
             id="next_action"
             name="next_action"
             required
-            placeholder="e.g., Pause, rewrite the event in factual terms, and send one clear response."
+            placeholder="e.g., Rewrite the event in factual terms and send one clear response."
             className="w-full rounded-md border border-zinc-500 bg-zinc-800 p-3 text-zinc-50"
           />
+          <p className="text-sm text-zinc-300">
+            Enter the next concrete action to take now. Keep it short and specific.
+          </p>
         </div>
 
         <div className="space-y-2">
