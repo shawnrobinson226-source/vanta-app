@@ -194,7 +194,7 @@ export default function SessionPage() {
             className="text-sm font-medium text-zinc-100"
             htmlFor="distortion_class"
           >
-            Distortion class
+            Distortion Class
           </label>
           <select
             id="distortion_class"
@@ -209,6 +209,10 @@ export default function SessionPage() {
               </option>
             ))}
           </select>
+          <p className="text-sm text-zinc-300">
+            Choose the primary pattern driving this situation. This determines
+            the response path used for the session.
+          </p>
           <div className="space-y-1 rounded-md border border-zinc-700 bg-zinc-900 p-3 text-xs text-zinc-300">
             <p className="text-zinc-200">Distortion helper definitions:</p>
             {DISTORTION_HELPERS.map((item) => (
