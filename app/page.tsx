@@ -96,41 +96,16 @@ export default async function HomePage() {
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-10">
       <header className="space-y-4">
-        <div className="space-y-3">
-  <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-zinc-50">
-    Turn confusion into clear next actions.
-  </h1>
-
-  <p className="max-w-3xl text-base leading-7 text-zinc-300">
-    Continuity Engine takes any situation, breaks it down, and gives you a structured path forward so you can act instead of overthink.
-  </p>
-
-  <p className="text-sm text-zinc-400">
-    Classify. Execute. Track. Stabilize.
-  </p>
-
-  <div className="pt-2">
-    <Link
-      href="/session"
-      className="rounded-xl bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-white"
-    >
-      Start Session
-    </Link>
-  </div>
-</div>
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-zinc-500">
-          Continuity Engine / Entry Gate
+          Continuity Engine / Entry
         </p>
-
-        <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-zinc-100">
-          Structured input. Deterministic analysis. Clear next action.
+        <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-zinc-50">
+          Continuity Engine
         </h1>
-
-        <p className="max-w-3xl text-base leading-7 text-zinc-400">
-          Continuity Engine is a state-resolution system. It takes a raw trigger, classifies
-          the distortion, maps the response path, logs the result, and updates
-          continuity over time.
+        <p className="max-w-3xl text-base leading-7 text-zinc-300">
+          Turn confusion into clear next actions.
         </p>
+        <p className="text-sm text-zinc-400">Classify. Execute. Track. Stabilize.</p>
 
         {degraded ? (
           <div className="rounded-xl border border-amber-800 bg-amber-950/40 px-4 py-3 text-sm text-amber-200">
@@ -139,7 +114,12 @@ export default async function HomePage() {
         ) : null}
 
         <div className="flex flex-wrap gap-3 pt-2">
-        
+          <Link
+            href="/session"
+            className="rounded-xl bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-white"
+          >
+            Start Session
+          </Link>
           <Link
             href="/dashboard"
             className="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-100 transition hover:border-zinc-500"
@@ -173,19 +153,12 @@ export default async function HomePage() {
           >
             {Math.round(continuity.continuity_score)}
           </p>
-          <p className="mt-3 text-sm text-zinc-500">
-            Current system alignment across perception, identity, intention,
-            and action.
-          </p>
         </section>
 
         <section className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6">
           <p className="text-sm text-zinc-400">Active Fractures</p>
           <p className="mt-3 text-5xl font-semibold tracking-tight text-zinc-100">
             {activeFracturesCount}
-          </p>
-          <p className="mt-3 text-sm text-zinc-500">
-            Count of unresolved or escalated sessions still affecting continuity.
           </p>
         </section>
 
@@ -194,74 +167,26 @@ export default async function HomePage() {
           <p className="mt-3 text-3xl font-semibold tracking-tight capitalize text-zinc-100">
             {volatilityBand}
           </p>
-          <p className="mt-3 text-sm text-zinc-500">
-            Stability band derived from recent clarity and continuity variation.
-          </p>
         </section>
       </section>
 
       <section className="grid gap-5 md:grid-cols-2">
-        <Card title="What Continuity Engine Is">
-          <ul className="space-y-2">
-            <li>A deterministic state-processing system.</li>
-            <li>A way to convert raw triggers into structured action.</li>
-            <li>A continuity tracker that measures alignment over time.</li>
-            <li>A tool for reducing distortion, not amplifying it.</li>
-          </ul>
+        <Card title="Recommended Next Step">
+          <p>Log one real trigger in Session and save it.</p>
+          <p>Then review Dashboard for pattern signal and Logs for record trace.</p>
         </Card>
 
-        <Card title="What Continuity Engine Is Not">
-          <ul className="space-y-2">
-            <li>Not journaling.</li>
-            <li>Not therapy.</li>
-            <li>Not a motivational assistant.</li>
-            <li>Not a place to dump noise without action.</li>
-          </ul>
+        <Card title="Reference">
+          <p>
+            Distortions: Narrative, Emotional, Behavioral, Perceptual, Continuity
+          </p>
         </Card>
       </section>
 
-      <section className="grid gap-5 md:grid-cols-3">
-        <Card title="How To Use It">
-          <ol className="list-decimal space-y-2 pl-5">
-            <li>Go to Session.</li>
-            <li>Enter the trigger clearly.</li>
-            <li>Confirm the distortion class.</li>
-            <li>Define the next action.</li>
-            <li>Save the result.</li>
-          </ol>
-        </Card>
-
-        <Card title="What Continuity Means">
-          <p>
-            Continuity is your alignment score across perception, identity,
-            intention, and action. It reflects whether your responses are
-            becoming more stable, more accurate, and more executable over time.
-          </p>
-        </Card>
-
-        <Card title="What Not To Do">
-          <ul className="space-y-2">
-            <li>Do not lie in the input.</li>
-            <li>Do not skip the action step.</li>
-            <li>Do not treat clarity as performance.</li>
-            <li>Do not expect the system to work without execution.</li>
-          </ul>
-        </Card>
-      </section>
-
-      <section className="grid gap-5 md:grid-cols-2">
-        <Card title="Recommended First Path">
-          <p>
-            Start with <span className="text-zinc-200">Session</span>. Submit one
-            real trigger. Save it. Then open{" "}
-            <span className="text-zinc-200">Dashboard</span> to inspect continuity
-            and <span className="text-zinc-200">Logs</span> to review the record.
-          </p>
-        </Card>
-
-        <Card title="Current Runtime Snapshot">
+      <section className="grid gap-5">
+        <Card title="Current Snapshot">
           {recentSessions.length === 0 ? (
-            <p>No sessions recorded yet. The system is initialized and ready.</p>
+            <p>No sessions recorded yet. Start Session to generate signals.</p>
           ) : (
             <div className="space-y-2">
               <div>Recent sessions: {recentSessions.length}</div>
