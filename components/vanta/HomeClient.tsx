@@ -95,7 +95,7 @@ export default function HomeClient() {
   if (!state) {
     return (
       <main style={{ padding: 24, maxWidth: 1100 }}>
-        <h1 style={{ marginBottom: 8 }}>VANTA</h1>
+        <h1 style={{ marginBottom: 8 }}>Continuity Engine</h1>
         <p style={{ marginTop: 0, opacity: 0.8 }}>Loading kernel state…</p>
       </main>
     );
@@ -115,7 +115,7 @@ export default function HomeClient() {
         }}
       >
         <div>
-          <h1 style={{ marginBottom: 8 }}>VANTA</h1>
+          <h1 style={{ marginBottom: 8 }}>Continuity Engine</h1>
           <p style={{ marginTop: 0, opacity: 0.8, maxWidth: 720, lineHeight: 1.6 }}>
             Deterministic distortion reduction engine. Reduce distortion, restore
             continuity, and execute the next aligned action.
@@ -279,3 +279,5 @@ export default function HomeClient() {
     </main>
   );
 }
+
+
