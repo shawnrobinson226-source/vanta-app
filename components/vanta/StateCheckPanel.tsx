@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getDashboardState } from "@/app/session/actions";
+import { getOrCreateOperatorId } from "@/lib/operator/client";
 
 type RuntimeState = {
   continuity: {
@@ -27,12 +27,33 @@ function barWidth(value: number) {
 }
 
 export default function StateCheckPanel() {
+  const [operatorId] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return getOrCreateOperatorId();
+  });
   const [state, setState] = useState<RuntimeState | null>(null);
 
   useEffect(() => {
+    if (!operatorId) return;
+
     void (async () => {
       try {
-        const result = await getDashboardState("op_legacy");
+        const response = await fetch("/api/v1/state", {
+          method: "GET",
+          headers: {
+            "x-operator-id": operatorId,
+          },
+          cache: "no-store",
+        });
+
+        const body = (await response.json()) as {
+          ok?: boolean;
+          data?: RuntimeState;
+        };
+
+        if (!response.ok || !body.ok || !body.data) return;
+
+        const result = body.data;
         setState({
           continuity: result.continuity,
           activeFracturesCount: result.activeFracturesCount,
@@ -41,7 +62,7 @@ export default function StateCheckPanel() {
         // keep silent in v1
       }
     })();
-  }, []);
+  }, [operatorId]);
 
   if (!state) {
     return (

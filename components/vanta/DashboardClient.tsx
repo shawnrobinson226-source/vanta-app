@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getDashboardState, getVolatilityBand } from "@/app/session/actions";
+import { getOrCreateOperatorId } from "@/lib/operator/client";
 
 type DashboardClientState = {
   continuity: {
@@ -116,23 +116,42 @@ function Card({
 }
 
 export default function DashboardClient() {
+  const [operatorId] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return getOrCreateOperatorId();
+  });
   const [state, setState] = useState<DashboardClientState | null>(null);
-  const [volatilityBand, setVolatilityBand] = useState("low");
+  const [volatilityBand, setVolatilityBand] = useState<"low" | "medium" | "high">(
+    "low",
+  );
 
   useEffect(() => {
+    if (!operatorId) return;
+
     void (async () => {
       try {
-        const [dashboard, volatility] = await Promise.all([
-          getDashboardState("op_legacy"),
-          getVolatilityBand("op_legacy"),
-        ]);
-        setState(dashboard);
-        setVolatilityBand(volatility);
+        const response = await fetch("/api/v1/state", {
+          method: "GET",
+          headers: {
+            "x-operator-id": operatorId,
+          },
+          cache: "no-store",
+        });
+
+        const body = (await response.json()) as {
+          ok?: boolean;
+          data?: DashboardClientState & { volatilityBand?: "low" | "medium" | "high" };
+        };
+
+        if (!response.ok || !body.ok || !body.data) return;
+
+        setState(body.data);
+        setVolatilityBand(body.data.volatilityBand ?? "low");
       } catch {
         // keep quiet in v1
       }
     })();
-  }, []);
+  }, [operatorId]);
 
   if (!state) {
     return (
