@@ -193,7 +193,7 @@ export default function SessionPage() {
         <div className="space-y-1">
           <p className="text-sm font-medium text-zinc-100">Quick Check</p>
           <p className="text-sm text-zinc-300">
-            Confirm this is a real situation you can act on right now.
+            Answer these checks before entering the session.
           </p>
         </div>
 

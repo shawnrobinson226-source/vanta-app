@@ -13,7 +13,7 @@ export default function ResetButton() {
 
   function handleReset() {
     const confirmed = window.confirm(
-      "This will delete all saved sessions, events, and derived runtime cache for the current operator. Continue?",
+      "Delete all session history? This cannot be undone.",
     );
 
     if (!confirmed) return;

@@ -87,6 +87,7 @@ export default async function HomePage() {
         <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-zinc-50">
           AXIS
         </h1>
+        <p className="text-base font-medium text-zinc-200">Continuity Engine</p>
         <p className="max-w-3xl text-base leading-7 text-zinc-300">
           Turn confusion into clear next actions.
         </p>
@@ -138,6 +139,9 @@ export default async function HomePage() {
           >
             {Math.round(continuity.continuity_score)}
           </p>
+          {recentSessions.length === 0 ? (
+            <p className="mt-3 text-sm text-zinc-400">Baseline. Updates after first session.</p>
+          ) : null}
         </section>
 
         <section className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6">

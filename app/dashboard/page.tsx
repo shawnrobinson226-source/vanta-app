@@ -239,6 +239,9 @@ export default function DashboardPage() {
           >
             {Math.round(continuity.continuity_score)}
           </p>
+          {recentSessions.length === 0 ? (
+            <p className="mt-3 text-sm text-zinc-400">Baseline. Updates after first session.</p>
+          ) : null}
           <p className="mt-3 text-sm text-zinc-300">
             Updated {formatDate(continuity.updated_at)}
           </p>
@@ -306,7 +309,7 @@ export default function DashboardPage() {
             Overall system stability based on recent outcomes
           </p>
           <p className="mt-3 text-xl font-semibold text-zinc-100">
-            {continuityStatus}
+            {recentSessions.length === 0 ? "No data yet." : continuityStatus}
           </p>
         </div>
 

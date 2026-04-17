@@ -135,6 +135,12 @@ export default function LogsClient({
   }
 
   function resetAll() {
+    const confirmed = window.confirm(
+      "Delete all session history? This cannot be undone.",
+    );
+
+    if (!confirmed) return;
+
     setMsg(null);
     startTransition(async () => {
       try {
