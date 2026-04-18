@@ -1,125 +1,134 @@
-# VANTA — V1 Kernel
+# AXIS — Continuity Engine
 
-VANTA is a deterministic cognitive system designed to reduce distortion, restore continuity, and execute aligned action.
+AXIS is a deterministic execution system that converts real-world situations into structured action.
 
-This repository contains the locked **V1 Kernel**: a working full-stack system with a defined taxonomy, session engine, persistence layer, and runtime dashboard.
-Current verified snapshot: V1.2
+It does not generate ideas.
+It classifies, directs, and tracks execution.
 
 ---
 
-## ⚙️ What VANTA Does
+## Core Flow
 
-VANTA converts internal input into structured, actionable output:
+AXIS follows a fixed loop:
 
 Trigger → Classification → Protocol → Action → Logged Event → Continuity Update
 
-This system is:
-- deterministic (no guesswork)
-- schema-driven (database is source of truth)
-- auditable (logs + derived metrics)
-- stable (V1 locked)
+* Trigger: A real situation or problem
+* Classification: Mapped to one of 5 distortion classes
+* Protocol: Predefined execution steps
+* Action: Immediate next step
+* Logged Event: Stored outcome
+* Continuity Update: System state adjusts over time
 
 ---
 
-## 🧠 Core Components
+## System Properties
 
-### 1. Session Engine (`/session`)
-Structured input → processed → stored → continuity updated
-
-### 2. Engine Logic (`lib/engine/executionFlow.ts`)
-- severity calculation
-- distortion handling
-- continuity delta computation
-
-### 3. Database (Turso / SQLite)
-
-Primary tables:
-- `entries` → session logs
-- `state_checks` → baseline state
-- `events` → immutable event ledger
-
-Derived tables:
-- `derived_session_index`
-- `derived_recurrence_stats`
-- `derived_recovery_stats`
-- `derived_volatility`
+* Deterministic (no randomness in core logic)
+* Schema-driven (no hidden behavior)
+* Operator-scoped (client-owned identity)
+* Auditable (every step is traceable)
+* Stable (locked taxonomy and outcomes)
 
 ---
 
-## 📊 Interface
+## Distortion Classes (Locked)
 
-### `/`
-Entry point
-
-### `/session`
-Submit structured session input
-
-### `/dashboard`
-System state:
-- continuity score
-- alignment vectors
-- volatility band
-- recent sessions
-
-### `/logs`
-Audit trail of all sessions
-
-### `/settings`
-Reset system state
+* Narrative
+* Emotional
+* Behavioral
+* Perceptual
+* Continuity
 
 ---
 
-## 🧩 V1 Taxonomy (Locked)
+## Outcomes (Locked)
 
-Distortion Classes:
-- narrative
-- emotional
-- behavioral
-- perceptual
-- continuity
-
-Outcomes:
-- reduced
-- unresolved
-- escalated
+* Reduced
+* Unresolved
+* Escalated
 
 ---
 
-## 🚀 Getting Started
+## API Surface
 
-### 1. Clone
+### V1 (Core System)
 
-```bash
-git clone https://github.com/shawnrobinson226-source/vanta-app.git
-cd vanta-app
+* /api/v1/session → create + persist session
+* /api/v1/state → current system state
+* /api/v1/logs → historical sessions
+* /api/v1/reset → operator-scoped reset
 
-## API Contract (V1)
+### V2 (External Interface Layer)
 
-The VANTA system exposes a read-only API layer for inspecting runtime state.
+* /api/v2/execute → operator-scoped execution
+* /api/v2/analytics → operator analytics
+* /api/v2/operator-profile → operator summary
 
-All endpoints are versioned under:
+All endpoints require:
+x-operator-id
 
+---
 
-/api/v1
+## Identity Model
 
+AXIS uses a client-owned identity model:
 
-### Available Endpoints
+* Operator ID is generated and stored client-side
+* No server-side identity fallback
+* No shared state between users
+* Requests without identity fail
 
-- `GET /api/v1/session` → recent sessions
-- `GET /api/v1/logs` → extended logs
-- `GET /api/v1/state` → continuity + system snapshot
-- `GET /api/v1/health` → system health check
+---
 
-### Contract Reference
+## Project Structure
 
-See full specification:
+app/
+components/
+lib/
+data/
+public/
 
+* lib/engine → execution logic
+* lib/operator → identity handling
+* app/api → API routes
+* components → UI layer
 
-docs/api-contract.md
+---
 
+## Deployment
 
-### V1 Constraints
+Built with:
 
-- Read-only API
-- No external mutation of system state
-- VANTA remains the source of truth for all logic and scoring
+* Next.js (App Router)
+* TypeScript
+* Turso (libSQL)
+
+Live deployment:
+
+* Vercel
+
+---
+
+## License
+
+Licensed under the MIT License.
+
+---
+
+## Positioning
+
+AXIS is not a chatbot.
+
+It is a structured execution engine designed to:
+
+* remove ambiguity
+* enforce clarity
+* track behavioral continuity over time
+
+---
+
+## Status
+
+V2-C Architecture — Locked
+System stable and ready for integration
