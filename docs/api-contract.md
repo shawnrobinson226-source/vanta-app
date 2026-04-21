@@ -1,20 +1,20 @@
-# VANTA API Contract
+# AXIS API Contract
 
 Status: V1  
 Version: v1  
-Scope: Read-only external access layer for VANTA runtime state
+Scope: Read-only external access layer for AXIS runtime state
 
 ---
 
 ## Purpose
 
-The VANTA API exposes a stable, read-only interface over the locked V1 system.
+The AXIS API exposes a stable, read-only interface over the locked V1 system.
 
-It exists to let external consumers inspect runtime state without redefining, bypassing, or mutating VANTA core logic.
+It exists to let external consumers inspect runtime state without redefining, bypassing, or mutating AXIS core logic.
 
 This API is a transport layer only.
 
-VANTA remains the source of truth for:
+AXIS remains the source of truth for:
 - taxonomy
 - scoring
 - session engine
@@ -22,9 +22,9 @@ VANTA remains the source of truth for:
 - data contracts
 - output meaning
 
-External systems may consume VANTA outputs.
+External systems may consume AXIS outputs.
 
-External systems may not redefine VANTA.
+External systems may not redefine AXIS.
 
 ---
 
