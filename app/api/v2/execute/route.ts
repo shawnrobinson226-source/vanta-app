@@ -30,6 +30,9 @@ export async function POST(req: Request) {
       distortion_class: validation.body.classification,
       next_action: validation.body.next_action,
       outcome: validation.body.outcome,
+      stability: validation.body.stability,
+      reference: validation.body.reference,
+      impact: validation.body.impact,
     });
 
     return apiOk(result);

@@ -5,6 +5,9 @@ const ALLOWED_REQUEST_FIELDS = [
   "classification",
   "next_action",
   "outcome",
+  "stability",
+  "reference",
+  "impact",
 ] as const;
 
 type AllowedRequestField = (typeof ALLOWED_REQUEST_FIELDS)[number];
@@ -14,6 +17,9 @@ export type ValidatedRequestBody = {
   classification?: DistortionClass;
   next_action?: string;
   outcome?: string;
+  stability?: number;
+  reference?: boolean;
+  impact?: number;
 };
 
 export type RequestValidationResult =
@@ -94,6 +100,40 @@ export function validateRequest(
     }
 
     validatedBody.outcome = body.outcome.trim();
+  }
+
+  if ("stability" in body) {
+    if (
+      typeof body.stability !== "number" ||
+      !Number.isFinite(body.stability) ||
+      body.stability < 0 ||
+      body.stability > 10
+    ) {
+      return { ok: false, error: "Invalid stability" };
+    }
+
+    validatedBody.stability = body.stability;
+  }
+
+  if ("reference" in body) {
+    if (typeof body.reference !== "boolean") {
+      return { ok: false, error: "Invalid reference" };
+    }
+
+    validatedBody.reference = body.reference;
+  }
+
+  if ("impact" in body) {
+    if (
+      typeof body.impact !== "number" ||
+      !Number.isFinite(body.impact) ||
+      body.impact < 0 ||
+      body.impact > 10
+    ) {
+      return { ok: false, error: "Invalid impact" };
+    }
+
+    validatedBody.impact = body.impact;
   }
 
   return {
