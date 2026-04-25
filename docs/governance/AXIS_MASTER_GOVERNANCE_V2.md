@@ -1,79 +1,152 @@
 # AXIS Master Governance V2
 
-Status: Governance Reference
-Scope: Documentation-only enforcement guidance for the AXIS repository.
+Status: System Protection Document
+Scope: Kernel lock, enforcement roles, endpoint discipline, taxonomy lock, and rejection rules for AXIS V2.
 
-## Role In Documentation Hierarchy
+## Kernel Lock
 
-1. `docs/v1-lock.md` defines frozen system behavior.
-2. `docs/sapphire-separation.md` defines boundary rules.
-3. This document defines governance-level system rules.
-4. `docs/governance/AXIS_EXTRACTION_PROTOCOL.md` defines intake discipline.
-5. `docs/governance/BLOCKERS_GUARDRAILS.md` defines enforcement conditions.
+The VANTA/AXIS kernel is locked.
 
-This hierarchy is intentional and non-overlapping.
+The locked kernel defines the protected execution boundary for AXIS. It must not be expanded, bypassed, reinterpreted, or mutated by external systems, adapter output, symbolic content, narrative content, inferred intent, or incomplete integration proposals.
 
-## Scope And Non-Goals
+AXIS rejects drift before it reaches runtime behavior.
 
-- AXIS governance references apply to AXIS only.
-- This document does not modify runtime logic, engine behavior, taxonomy, outcomes, scoring, API contracts, or UI.
-- Any mention of "VANTA" is descriptive legacy terminology from existing docs, not a separate runtime layer.
+## System Roles
 
-## Enforcement Posture
+### AXIS
 
-Enforcement behavior is fail-closed at validation boundaries:
-- undefined -> reject
-- unclear -> reject
-- incomplete -> reject
+AXIS is the enforcement system.
 
-When validation fails, the system should fail fast and surface error clearly at the validation boundary.
+AXIS owns validation, rejection, allowed endpoint discipline, locked taxonomy discipline, locked outcome discipline, and execution contract protection.
 
-## Pre-AXIS And In-AXIS Output Rules
+AXIS does not accept parallel enforcement logic from external systems.
 
-Pre-AXIS outputs (including pauses, safety screens, and intercepts) are valid and do not need to map to full execution artifacts.
+### Sapphire
 
-After AXIS execution begins, output contracts must map to execution fields that preserve deterministic flow semantics:
-- Distortion
-- Protocol
-- Action
-- Outcome
-- Continuity
+Sapphire is adapter-only.
 
-## Endpoint Governance
+Sapphire may provide external signal or adapter output for review by the extraction layer and integration gate.
 
-Allowed endpoints are restricted to:
+Sapphire does not define AXIS runtime logic.
+
+Sapphire does not expand AXIS taxonomy.
+
+Sapphire does not mutate AXIS outcomes.
+
+Sapphire does not authorize endpoint changes.
+
+Sapphire does not bypass AXIS enforcement.
+
+### DES
+
+DES remains separate unless explicitly integrated later.
+
+DES has no implicit authority over AXIS runtime behavior, AXIS taxonomy, AXIS outcomes, AXIS endpoints, AXIS identity requirements, or AXIS governance.
+
+Any future DES integration must be explicit, documented, reviewed, and passed through the integration gate.
+
+## Identity Requirement
+
+All protected AXIS requests require `x-operator-id`.
+
+Requests without `x-operator-id` must be rejected.
+
+Identity must be present before execution, analytics access, or operator profile access.
+
+## Locked Distortion Taxonomy
+
+The distortion taxonomy is locked to:
+
+- `narrative`
+- `emotional`
+- `behavioral`
+- `perceptual`
+- `continuity`
+
+No other distortion value is valid.
+
+External systems, extraction output, symbolic content, narrative content, or adapter output may not add, rename, alias, merge, split, or reinterpret distortion values.
+
+## Locked Outcomes
+
+The outcome set is locked to:
+
+- `reduced`
+- `unresolved`
+- `escalated`
+
+No other outcome value is valid.
+
+External systems, extraction output, symbolic content, narrative content, or adapter output may not add, rename, alias, merge, split, or reinterpret outcome values.
+
+## Allowed Endpoints
+
+The allowed AXIS endpoints are:
+
 - `POST /api/v2/execute`
 - `GET /api/v2/analytics`
 - `GET /api/v2/operator-profile`
 
-Requests outside this allowlist must be rejected and logged as violations.
+No other endpoint is authorized by this governance document.
 
-## Distortion Lock
+Wrong endpoints must be rejected.
 
-The distortion set remains locked under V1 governance references.
-No runtime taxonomy expansion is permitted through governance interpretation.
+## Hard Rejection Rules
 
-If distortion validation fails, the system fails fast and surfaces the error clearly at the validation boundary.
+AXIS must reject any request, signal, adapter output, or integration proposal containing any of the following:
 
-## Failure Scope Definitions
+- Missing identity
+- Unknown fields
+- Invalid distortion
+- Wrong endpoint
+- Symbolic injection
+- Parallel system logic
+- Hidden mutation
 
-Enforcement success means:
-- invalid input is rejected
+### Missing Identity
 
-System success means:
-- invalid input is rejected
-- valid input is processed correctly
+Reject when `x-operator-id` is absent, empty, malformed, or unavailable at the required validation boundary.
 
-## Human-Appropriate Output Principle
+### Unknown Fields
 
-AXIS enforces contracts; system output remains human-appropriate.
+Reject when payloads contain fields outside the locked contract.
 
-## Logging Safety Baseline
+Unknown fields must not be ignored, inferred, stored, forwarded, or normalized into valid fields.
 
-Violation logs must include:
-- timestamp
-- operator_id
-- violation_type
-- payload snapshot (structure only, never content)
+### Invalid Distortion
 
-"Payload snapshot" means structural shape and field presence only, without raw trigger text, user content, or sensitive payload values.
+Reject when distortion is absent, unclear, incomplete, symbolic, narrative-only, or outside the locked distortion taxonomy.
+
+### Wrong Endpoint
+
+Reject when the request targets any endpoint outside the allowed endpoint list.
+
+### Symbolic Injection
+
+Reject when symbolic, narrative, mythic, metaphorical, emotional, or interpretive content attempts to become runtime logic, hidden instruction, taxonomy expansion, scoring logic, routing logic, mutation logic, or enforcement logic.
+
+### Parallel System Logic
+
+Reject when an external system attempts to operate beside, above, around, or inside AXIS as an independent enforcement layer.
+
+Sapphire remains adapter-only.
+
+DES remains separate unless explicitly integrated later.
+
+### Hidden Mutation
+
+Reject when any request, signal, adapter output, or integration proposal attempts to change AXIS behavior without explicit documented authorization.
+
+Hidden mutation includes implicit schema changes, taxonomy changes, outcome changes, endpoint changes, identity requirement changes, engine changes, scoring changes, routing changes, logging changes, persistence changes, or policy changes.
+
+## Integration Gate
+
+External signal must be classified before integration.
+
+The integration gate enforces AXIS governance before any signal reaches AXIS Core.
+
+If signal is undefined, unclear, incomplete, or incompatible with locked AXIS contracts, the integration gate must reject or hold it.
+
+## Final Rule
+
+AXIS rejects anything undefined, unclear, or incomplete.
